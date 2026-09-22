@@ -1,0 +1,13 @@
+# Evaluation sites with public NAIP imagery and USGS 3DEP LiDAR DSM/DTM on Planetary Computer.
+# Coverage checked 2026-09-11 (no LiDAR DSM at: Seattle, Minneapolis, Ames, Boise, Oregon coast).
+# Urban sites avoid DC, New York and Philadelphia (the GAMUS cities) so a GAMUS fine-tune is
+# never scored on its training cities.
+tile_px: 1024          # eval tiles are cut from each site crop at this size
+min_valid_frac: 0.8    # keep a tile only if at least this share of it has LiDAR DSM
+sites:
+  - {name: denver, landscape: urban, lon: -104.9950, lat: 39.7475, size_px: 4096}
+  - {name: austin, landscape: urban, lon: -97.7431, lat: 30.2672, size_px: 4096}
+  - {name: palouse, landscape: sparse, lon: -117.2000, lat: 46.9000, size_px: 4096}
+  - {name: boulder_foothills, landscape: hilly, lon: -105.3200, lat: 40.0200, size_px: 4096}
+  - {name: smokies, landscape: forested, lon: -83.4500, lat: 35.6500, size_px: 4096}
+  - {name: vermont, landscape: forested, lon: -72.8000, lat: 44.3000, size_px: 4096}

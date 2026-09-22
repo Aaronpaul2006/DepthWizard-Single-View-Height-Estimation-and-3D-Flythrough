@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "depthwizard"
+version = "0.1.0"
+description = "Height maps and 3D flythroughs from a single satellite image (SIH26175)."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+# Install torch first from the CUDA wheel index (see README); Blackwell GPUs need >= 2.7 / cu128.
+dependencies = [
+  "torch>=2.7",
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "opencv-python-headless>=4.9",
+  "pillow>=10",
+  "rasterio>=1.3.10",
+  "pyproj>=3.6",
+  "shapely>=2.0",
+  "transformers>=4.45",
+  "huggingface_hub>=0.24",
+  "safetensors>=0.4",
+  "pyyaml>=6",
+  "requests>=2.31",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+eval = ["h5py>=3.10", "pystac-client>=0.8", "planetary-computer>=1.0"]
+dev = ["pytest>=8", "ruff>=0.5", "httpx>=0.27"]
+
+[tool.setuptools.packages.find]
+include = ["depthwizard*", "api*", "evals*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["viewer", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares request parameters through these default-value calls.
+extend-immutable-calls = ["fastapi.File", "fastapi.Form", "fastapi.Depends"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,15 @@
+[package]
+name = "depthwizard"
+version = "0.1.0"
+description = "DepthWizard desktop shell: starts the local backend and shows the viewer"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[profile.release]
+strip = true
+lto = true

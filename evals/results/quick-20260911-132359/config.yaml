@@ -1,0 +1,50 @@
+model:
+  id: depth-anything/Depth-Anything-V2-Small-hf
+  local_dir: data/models/Depth-Anything-V2-Small-hf
+  device: auto
+  fp16: true
+depth:
+  global_long_side: 1036
+  tile_size: 518
+  tile_stride: 259
+  batch_size: 8
+  align_trim_frac: 0.05
+input:
+  rgb_bands:
+  - 1
+  - 2
+  - 3
+  stretch_percentiles:
+  - 2
+  - 98
+  max_long_side: 12000
+relative:
+  norm_percentiles:
+  - 1
+  - 99
+dem:
+  copernicus_url: https://copernicus-dem-30m.s3.amazonaws.com/{name}/{name}.tif
+  fetch_timeout_s: 60
+  resampling: bilinear
+  cache_subdir: copernicus
+calibration:
+  band_sigma_k: 0.5
+  huber_delta_m: 2.0
+  gcp_min_points: 3
+  dem_relief_std_m: 15.0
+  prior_percentile: 98
+  prior_height_m: 12.0
+export:
+  nodata: -9999.0
+  viewer_max_dsm_side: 2048
+  viewer_max_ortho_side: 4096
+api:
+  cors_origins:
+  - http://127.0.0.1:5173
+  - http://localhost:5173
+  - tauri://localhost
+  - http://tauri.localhost
+  max_upload_mb: 2048
+paths:
+  cache: data/cache
+  jobs: data/jobs

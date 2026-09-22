@@ -1,0 +1,25 @@
+# Tuning split: row 0 (northern strip) of every NAIP + 3DEP site. Config values are tuned here only.
+naip3dep/denver/0_0
+naip3dep/denver/0_1
+naip3dep/denver/0_2
+naip3dep/denver/0_3
+naip3dep/austin/0_0
+naip3dep/austin/0_1
+naip3dep/austin/0_2
+naip3dep/austin/0_3
+naip3dep/palouse/0_0
+naip3dep/palouse/0_1
+naip3dep/palouse/0_2
+naip3dep/palouse/0_3
+naip3dep/boulder_foothills/0_0
+naip3dep/boulder_foothills/0_1
+naip3dep/boulder_foothills/0_2
+naip3dep/boulder_foothills/0_3
+naip3dep/smokies/0_0
+naip3dep/smokies/0_1
+naip3dep/smokies/0_2
+naip3dep/smokies/0_3
+naip3dep/vermont/0_0
+naip3dep/vermont/0_1
+naip3dep/vermont/0_2
+naip3dep/vermont/0_3

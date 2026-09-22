@@ -1,0 +1,13 @@
+# Reported numbers only. Frozen once evaluated. Rows 1-3 of the sparse sites.
+naip3dep/palouse/1_0
+naip3dep/palouse/1_1
+naip3dep/palouse/1_2
+naip3dep/palouse/1_3
+naip3dep/palouse/2_0
+naip3dep/palouse/2_1
+naip3dep/palouse/2_2
+naip3dep/palouse/2_3
+naip3dep/palouse/3_0
+naip3dep/palouse/3_1
+naip3dep/palouse/3_2
+naip3dep/palouse/3_3

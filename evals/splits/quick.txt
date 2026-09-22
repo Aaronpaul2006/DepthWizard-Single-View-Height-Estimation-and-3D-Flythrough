@@ -1,0 +1,6 @@
+# 5 tiles (2 urban, 1 each of the rest), all from val. Run after every model/calibration change.
+naip3dep/denver/0_1
+naip3dep/austin/0_2
+naip3dep/palouse/0_1
+naip3dep/boulder_foothills/0_2
+naip3dep/smokies/0_1

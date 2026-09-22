@@ -1,0 +1,69 @@
+# Every tunable lives here (CLAUDE.md rule 8). Eval runs save a copy of the config they used.
+# Relative paths resolve against the repo root.
+
+model:
+  id: depth-anything/Depth-Anything-V2-Small-hf   # Apache-2.0; larger checkpoints are non-commercial
+  local_dir: data/models/Depth-Anything-V2-Small-hf
+  device: auto            # auto | cuda | cpu
+  fp16: true              # applies on CUDA only; CPU always runs fp32
+
+depth:
+  global_long_side: 1036  # low-res whole-image pass G; multiple of the 14 px ViT patch
+  tile_size: 518          # native-resolution tiles, multiple of 14
+  tile_stride: 259        # 50% overlap
+  batch_size: 8           # tiles per forward pass; halved automatically on CUDA OOM
+  align_trim_frac: 0.05   # drop this fraction of largest residuals when aligning a tile to G
+
+input:
+  rgb_bands: [1, 2, 3]          # 1-based band indices used as R, G, B for multi-band rasters
+  stretch_percentiles: [2, 98]  # per-band stretch to 8-bit for non-uint8 input
+  max_long_side: 12000          # larger inputs are downsampled with a warning
+
+relative:
+  norm_percentiles: [1, 99]     # rDSM = (d - p1) / (p99 - p1), clipped to [0, 1]
+
+dem:
+  copernicus_url: https://copernicus-dem-30m.s3.amazonaws.com/{name}/{name}.tif
+  fetch_timeout_s: 60
+  resampling: bilinear          # DEM -> image grid (rasterio Resampling name)
+  cache_subdir: copernicus      # under paths.cache
+  # EGM2008 geoid (2.5', PROJ CDN, public domain; scripts/fetch_geoid.py). Converts ellipsoidal
+  # DEMs such as CartoDEM to EGM2008 heights, the datum Copernicus GLO-30 already uses.
+  geoid_grid: data/geoid/us_nga_egm08_25.tif
+
+calibration:
+  # Values below were tuned on the val split only: evals/results/tune-20260911-144322 (scene mode).
+  # d_low = gaussian(d, sigma), sigma = k * dem_res / pixel_size. The DEM's own blur argues for
+  # k = 0.5 (ARCHITECTURE.md); with the DEM-band scale, val preferred 1.0 by a small margin.
+  band_sigma_k: 1.0
+  huber_delta_m: 2.0            # Method A: residual scale where the Huber loss turns linear
+  gcp_min_points: 3             # fewer GCPs than this and the next scale source is used
+  # DEM-band scale: regress the DEM's own resolvable detail (DEM cell size up to this many cells,
+  # a Gaussian sigma) on the model's detail in the same band; used only if they correlate.
+  band_coarse_cells: 4.0
+  band_min_r: 0.1               # below this correlation the model's detail is not trusted
+  band_min_cells: 64            # fewer valid DEM cells than this: too little scene to estimate
+  # std(DEM) above this: take the detail scale from Method A. Off (never exceeded): on val it made
+  # hilly and forested scenes worse, because the model confuses slope with height.
+  dem_relief_std_m: 1.0e+9      # YAML 1.1 needs the signed exponent, or this is read as text
+  prior_percentile: 98          # scene prior: this percentile of d_high ...
+  # ... is this many metres. 0 = add no detail when nothing else applies (the DSM is the DEM):
+  # on val any blind prior invented relief on flat farmland.
+  prior_height_m: 0.0
+
+export:
+  nodata: -9999.0               # GeoTIFF nodata sentinel
+  viewer_max_dsm_side: 2048     # VIEWER_CONTRACT size cap for dsm.bin
+  viewer_max_ortho_side: 4096   # VIEWER_CONTRACT size cap for ortho.png
+
+api:
+  cors_origins:                 # the viewer outside FastAPI: Vite dev server and the Tauri shell
+    - http://127.0.0.1:5173
+    - http://localhost:5173
+    - tauri://localhost
+    - http://tauri.localhost
+  max_upload_mb: 2048
+
+paths:
+  cache: data/cache
+  jobs: data/jobs

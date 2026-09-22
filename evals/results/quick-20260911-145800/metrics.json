@@ -1,0 +1,376 @@
+{
+  "run_id": "quick-20260911-145800",
+  "split": "quick",
+  "splits": [
+    "quick"
+  ],
+  "tiles": [
+    "naip3dep/denver/0_1",
+    "naip3dep/austin/0_2",
+    "naip3dep/palouse/0_1",
+    "naip3dep/boulder_foothills/0_2",
+    "naip3dep/smokies/0_1"
+  ],
+  "git": {
+    "commit": "uncommitted",
+    "dirty": true
+  },
+  "device": "cuda:NVIDIA GeForce RTX 5060 Laptop GPU",
+  "object_min_height_m": 2.5,
+  "summary": {
+    "all": {
+      "dem_only": {
+        "tiles": 5,
+        "rmse": 8.776472972542567,
+        "mae": 4.8464532628131565,
+        "pearson_r": 0.6751356100721742,
+        "bias": -1.3808045377256348,
+        "nmad": 3.764239867858886,
+        "offset_free_rmse": 8.341500602538787,
+        "ndsm_rmse": 12.290830665781852
+      },
+      "method_a": {
+        "tiles": 5,
+        "rmse": 39.991165128086024,
+        "mae": 32.078975263756,
+        "pearson_r": -0.1628943272684109,
+        "bias": -8.765234946954298,
+        "nmad": 36.38424508026123,
+        "offset_free_rmse": 36.74211324394951,
+        "ndsm_rmse": 49.677709483732926
+      },
+      "method_b": {
+        "tiles": 5,
+        "rmse": 8.688974553392066,
+        "mae": 4.76715858145617,
+        "pearson_r": 0.6932306938913261,
+        "bias": -1.3862526254612022,
+        "nmad": 3.6834791601562493,
+        "offset_free_rmse": 8.247512704515902,
+        "ndsm_rmse": 12.171335587964519
+      }
+    },
+    "forested": {
+      "dem_only": {
+        "tiles": 1,
+        "rmse": 7.41340019584204,
+        "mae": 5.835615053656511,
+        "pearson_r": 0.997554829157538,
+        "bias": 3.4559655307093635,
+        "nmad": 6.1300225341796875,
+        "offset_free_rmse": 6.558689692120053,
+        "ndsm_rmse": 7.2858452538952525
+      },
+      "method_a": {
+        "tiles": 1,
+        "rmse": 105.13261647398387,
+        "mae": 88.40048695041332,
+        "pearson_r": -0.09238393484852397,
+        "bias": -30.659282394102775,
+        "nmad": 120.50866713867187,
+        "offset_free_rmse": 100.5638356243278,
+        "ndsm_rmse": 105.18370960938171
+      },
+      "method_b": {
+        "tiles": 1,
+        "rmse": 7.255090050165794,
+        "mae": 5.748737476882525,
+        "pearson_r": 0.9976737380088505,
+        "bias": 3.423257668619044,
+        "nmad": 6.055820141601562,
+        "offset_free_rmse": 6.396689907953018,
+        "ndsm_rmse": 7.163743464216117
+      }
+    },
+    "hilly": {
+      "dem_only": {
+        "tiles": 1,
+        "rmse": 2.744423270852811,
+        "mae": 2.194834501016885,
+        "pearson_r": 0.9956047945598232,
+        "bias": 0.8417413122951984,
+        "nmad": 2.6924609619140623,
+        "offset_free_rmse": 2.612535863630004,
+        "ndsm_rmse": 2.250542395078381
+      },
+      "method_a": {
+        "tiles": 1,
+        "rmse": 39.590039033219576,
+        "mae": 32.44136381277349,
+        "pearson_r": -0.8291525113984799,
+        "bias": 4.04372556519229,
+        "nmad": 37.33918688964844,
+        "offset_free_rmse": 40.30383387972126,
+        "ndsm_rmse": 42.796907385011004
+      },
+      "method_b": {
+        "tiles": 1,
+        "rmse": 2.744423270852811,
+        "mae": 2.194834501016885,
+        "pearson_r": 0.9956047945598232,
+        "bias": 0.8417413122951984,
+        "nmad": 2.6924609619140623,
+        "offset_free_rmse": 2.612535863630004,
+        "ndsm_rmse": 2.250542395078381
+      }
+    },
+    "sparse": {
+      "dem_only": {
+        "tiles": 1,
+        "rmse": 1.2503459688895846,
+        "mae": 1.1047899992554449,
+        "pearson_r": 0.9981552617673612,
+        "bias": -1.088604981370736,
+        "nmad": 0.45453489990234375,
+        "offset_free_rmse": 0.6176373403233475,
+        "ndsm_rmse": null
+      },
+      "method_a": {
+        "tiles": 1,
+        "rmse": 12.410730852269586,
+        "mae": 10.423424107197206,
+        "pearson_r": -0.09324462528370468,
+        "bias": 6.505405603384133,
+        "nmad": 12.533462786865234,
+        "offset_free_rmse": 10.573860789010533,
+        "ndsm_rmse": null
+      },
+      "method_b": {
+        "tiles": 1,
+        "rmse": 1.2524084123399115,
+        "mae": 1.1009183627320454,
+        "pearson_r": 0.9980154527727748,
+        "bias": -1.081940962933004,
+        "nmad": 0.49896584472656247,
+        "offset_free_rmse": 0.6325408968941937,
+        "ndsm_rmse": null
+      }
+    },
+    "urban": {
+      "dem_only": {
+        "tiles": 2,
+        "rmse": 16.237097713564204,
+        "mae": 7.548513380068471,
+        "pearson_r": 0.1921815824380739,
+        "bias": -5.056562275131,
+        "nmad": 4.77209047164917,
+        "offset_free_rmse": 15.959320058310265,
+        "ndsm_rmse": 19.813467507076886
+      },
+      "method_a": {
+        "tiles": 2,
+        "rmse": 21.411219640478542,
+        "mae": 14.564800724197994,
+        "pearson_r": 0.10015471759432697,
+        "bias": -11.858011754622567,
+        "nmad": 5.769954293060302,
+        "offset_free_rmse": 16.13451796334399,
+        "ndsm_rmse": 25.365110470269503
+      },
+      "method_b": {
+        "tiles": 2,
+        "rmse": 16.096475516800908,
+        "mae": 7.395651283324696,
+        "pearson_r": 0.23742974205759101,
+        "bias": -5.057160572643625,
+        "nmad": 4.58507442626953,
+        "offset_free_rmse": 15.797898427051152,
+        "ndsm_rmse": 19.635528246281787
+      }
+    }
+  },
+  "relative_summary": null,
+  "datasets": {
+    "naip3dep/austin": {
+      "site": {
+        "name": "austin",
+        "landscape": "urban",
+        "lon": -97.7431,
+        "lat": 30.2672,
+        "size_px": 4096
+      },
+      "naip": {
+        "year": 2022,
+        "gsd_m": 0.6,
+        "items": [
+          "tx_m_3009743_sw_14_060_20220608",
+          "tx_m_3009742_se_14_060_20220608"
+        ]
+      },
+      "lidar": {
+        "dsm": [
+          {
+            "id": "USGS_LPC_TX_Central_B1_2017_LAS_2019-dsm-2m-6-9",
+            "usgs_id": "USGS_LPC_TX_Central_B1_2017_LAS_2019",
+            "end": "2019-01-01T00:00:00Z"
+          },
+          {
+            "id": "USGS_LPC_TX_Central_B1_2017_LAS_2019-dsm-2m-5-9",
+            "usgs_id": "USGS_LPC_TX_Central_B1_2017_LAS_2019",
+            "end": "2019-01-01T00:00:00Z"
+          }
+        ],
+        "dtm": [
+          {
+            "id": "USGS_LPC_TX_Central_B1_2017_LAS_2019-dtm-2m-6-9",
+            "usgs_id": "USGS_LPC_TX_Central_B1_2017_LAS_2019",
+            "end": "2019-01-01T00:00:00Z"
+          },
+          {
+            "id": "USGS_LPC_TX_Central_B1_2017_LAS_2019-dtm-2m-5-9",
+            "usgs_id": "USGS_LPC_TX_Central_B1_2017_LAS_2019",
+            "end": "2019-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "crs": "EPSG:26914",
+      "vertical_datum": "NAVD88 (3DEP LiDAR)",
+      "truth_resolution_m": 2.0
+    },
+    "naip3dep/boulder_foothills": {
+      "site": {
+        "name": "boulder_foothills",
+        "landscape": "hilly",
+        "lon": -105.32,
+        "lat": 40.02,
+        "size_px": 4096
+      },
+      "naip": {
+        "year": 2023,
+        "gsd_m": 0.3,
+        "items": [
+          "co_m_4010562_sw_13_030_20230925_20240104"
+        ]
+      },
+      "lidar": {
+        "dsm": [
+          {
+            "id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015-dsm-2m-2-11",
+            "usgs_id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015",
+            "end": "2014-05-31T00:00:00Z"
+          }
+        ],
+        "dtm": [
+          {
+            "id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015-dtm-2m-2-11",
+            "usgs_id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015",
+            "end": "2014-05-31T00:00:00Z"
+          }
+        ]
+      },
+      "crs": "EPSG:26913",
+      "vertical_datum": "NAVD88 (3DEP LiDAR)",
+      "truth_resolution_m": 2.0
+    },
+    "naip3dep/denver": {
+      "site": {
+        "name": "denver",
+        "landscape": "urban",
+        "lon": -104.995,
+        "lat": 39.7475,
+        "size_px": 4096
+      },
+      "naip": {
+        "year": 2023,
+        "gsd_m": 0.3,
+        "items": [
+          "co_m_3910524_ne_13_030_20230925_20240104",
+          "co_m_3910516_se_13_030_20230925_20240104",
+          "co_m_3910417_nw_13_030_20230925_20240104",
+          "co_m_3910409_sw_13_030_20230925_20240104"
+        ]
+      },
+      "lidar": {
+        "dsm": [
+          {
+            "id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015-dsm-2m-6-7",
+            "usgs_id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015",
+            "end": "2014-05-31T00:00:00Z"
+          }
+        ],
+        "dtm": [
+          {
+            "id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015-dtm-2m-6-7",
+            "usgs_id": "USGS_LPC_CO_SoPlatteRiver_Lot5_2013_LAS_2015",
+            "end": "2014-05-31T00:00:00Z"
+          }
+        ]
+      },
+      "crs": "EPSG:26913",
+      "vertical_datum": "NAVD88 (3DEP LiDAR)",
+      "truth_resolution_m": 2.0
+    },
+    "naip3dep/palouse": {
+      "site": {
+        "name": "palouse",
+        "landscape": "sparse",
+        "lon": -117.2,
+        "lat": 46.9,
+        "size_px": 4096
+      },
+      "naip": {
+        "year": 2023,
+        "gsd_m": 0.6,
+        "items": [
+          "wa_m_4611707_sw_11_060_20230630_20230911",
+          "wa_m_4611707_se_11_060_20230630_20230911"
+        ]
+      },
+      "lidar": {
+        "dsm": [
+          {
+            "id": "WA_FEMAHQ_B1_QL2_2018-dsm-2m-9-6",
+            "usgs_id": "WA_FEMAHQ_B1_QL2_2018",
+            "end": "2018-12-31T00:00:00Z"
+          }
+        ],
+        "dtm": [
+          {
+            "id": "WA_FEMAHQ_B1_QL2_2018-dtm-2m-9-6",
+            "usgs_id": "WA_FEMAHQ_B1_QL2_2018",
+            "end": "2018-12-31T00:00:00Z"
+          }
+        ]
+      },
+      "crs": "EPSG:26911",
+      "vertical_datum": "NAVD88 (3DEP LiDAR)",
+      "truth_resolution_m": 2.0
+    },
+    "naip3dep/smokies": {
+      "site": {
+        "name": "smokies",
+        "landscape": "forested",
+        "lon": -83.45,
+        "lat": 35.65,
+        "size_px": 4096
+      },
+      "naip": {
+        "year": 2023,
+        "gsd_m": 0.6,
+        "items": [
+          "tn_m_3508321_sw_17_060_20230504_20240104"
+        ]
+      },
+      "lidar": {
+        "dsm": [
+          {
+            "id": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dsm-2m-6-4",
+            "usgs_id": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017",
+            "end": "2017-01-01T00:00:00Z"
+          }
+        ],
+        "dtm": [
+          {
+            "id": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017-dtm-2m-6-4",
+            "usgs_id": "USGS_LPC_TN_Eastern_2_16_B16_Del2_2016_LAS_2017",
+            "end": "2017-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "crs": "EPSG:26917",
+      "vertical_datum": "NAVD88 (3DEP LiDAR)",
+      "truth_resolution_m": 2.0
+    }
+  },
+  "note": "Each site scene is processed once like a user upload; landscape values are means of per-tile metrics. Truth: 3DEP LiDAR (NAVD88); DEM: Copernicus GLO-30 (EGM2008), so raw RMSE includes a datum offset; see offset_free_rmse. GAMUS values are scale-aligned."
+}

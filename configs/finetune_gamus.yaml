@@ -1,0 +1,16 @@
+# Decoder fine-tune on GAMUS (scripts/finetune_gamus.py). Training-only settings; the app never
+# reads this file. Model selection uses GAMUS val only; nothing here touches the NAIP/3DEP tiles.
+base_model: data/models/Depth-Anything-V2-Small-hf
+output_dir: data/models/Depth-Anything-V2-Small-gamus
+train_split: train
+val_split: val
+crop_px: 518              # training crop, a multiple of the 14 px ViT patch
+val_long_side: 1036       # validation inference size, same as the pipeline's global pass
+batch_size: 8
+epochs: 6
+learning_rate: 5.0e-5     # decoder only; the ViT encoder stays frozen
+weight_decay: 1.0e-2
+warmup_steps: 100
+num_workers: 2
+val_tiles: 60             # GAMUS val tiles scored after each epoch
+seed: 26175

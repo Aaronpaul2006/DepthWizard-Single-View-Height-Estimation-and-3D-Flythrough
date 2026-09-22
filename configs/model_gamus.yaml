@@ -1,0 +1,4 @@
+# Override: use the GAMUS fine-tuned decoder (scripts/finetune_gamus.py) instead of the stock
+# Depth Anything V2 Small. Compare with:  python -m evals.run --split quick --config configs/model_gamus.yaml
+model:
+  local_dir: data/models/Depth-Anything-V2-Small-gamus

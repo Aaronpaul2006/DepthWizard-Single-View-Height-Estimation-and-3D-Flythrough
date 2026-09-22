@@ -1,0 +1,25 @@
+# Reported numbers only. Frozen once evaluated. Rows 1-3 of the urban sites.
+naip3dep/denver/1_0
+naip3dep/denver/1_1
+naip3dep/denver/1_2
+naip3dep/denver/1_3
+naip3dep/denver/2_0
+naip3dep/denver/2_1
+naip3dep/denver/2_2
+naip3dep/denver/2_3
+naip3dep/denver/3_0
+naip3dep/denver/3_1
+naip3dep/denver/3_2
+naip3dep/denver/3_3
+naip3dep/austin/1_0
+naip3dep/austin/1_1
+naip3dep/austin/1_2
+naip3dep/austin/1_3
+naip3dep/austin/2_0
+naip3dep/austin/2_1
+naip3dep/austin/2_2
+naip3dep/austin/2_3
+naip3dep/austin/3_0
+naip3dep/austin/3_1
+naip3dep/austin/3_2
+naip3dep/austin/3_3

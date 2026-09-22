@@ -1,0 +1,7 @@
+# Evaluation-only settings (the app never reads these). App tunables live in default.yaml.
+datasets_root: data/datasets
+splits_dir: evals/splits
+results_dir: evals/results
+object_min_height_m: 2.5    # nDSM metric: reference height above ground beyond this = building/tree
+error_map_nmad_clamp: 3.0   # error-map colour scale: ±3 × NMAD, as in the viewer contract
+error_map_max_side: 512     # error-map PNGs are downsampled to this size

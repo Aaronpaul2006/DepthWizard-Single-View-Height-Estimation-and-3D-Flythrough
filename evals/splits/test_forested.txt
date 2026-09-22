@@ -1,0 +1,25 @@
+# Reported numbers only. Frozen once evaluated. Rows 1-3 of the forested sites.
+naip3dep/smokies/1_0
+naip3dep/smokies/1_1
+naip3dep/smokies/1_2
+naip3dep/smokies/1_3
+naip3dep/smokies/2_0
+naip3dep/smokies/2_1
+naip3dep/smokies/2_2
+naip3dep/smokies/2_3
+naip3dep/smokies/3_0
+naip3dep/smokies/3_1
+naip3dep/smokies/3_2
+naip3dep/smokies/3_3
+naip3dep/vermont/1_0
+naip3dep/vermont/1_1
+naip3dep/vermont/1_2
+naip3dep/vermont/1_3
+naip3dep/vermont/2_0
+naip3dep/vermont/2_1
+naip3dep/vermont/2_2
+naip3dep/vermont/2_3
+naip3dep/vermont/3_0
+naip3dep/vermont/3_1
+naip3dep/vermont/3_2
+naip3dep/vermont/3_3

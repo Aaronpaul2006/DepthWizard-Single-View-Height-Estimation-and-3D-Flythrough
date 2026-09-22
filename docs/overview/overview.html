@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Template for scripts/build_overview_pdf.py. Dollar-sign placeholders are filled from
+     evals/results; never type an accuracy number into this file. -->
+<title>DepthWizard: project overview</title>
+<style>
+  @page {
+    size: A4;
+    margin: 17mm 17mm 19mm 17mm;
+    @bottom-left { content: "DepthWizard · Project overview · SIH26175"; font-family: "Segoe UI", Arial, sans-serif; font-size: 7.5pt; color: #8a94a3; }
+    @bottom-right { content: counter(page) " / " counter(pages); font-family: "Segoe UI", Arial, sans-serif; font-size: 7.5pt; color: #8a94a3; }
+  }
+  @page cover { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }
+
+  :root {
+    --ink: #15202b; --muted: #566170; --faint: #8a94a3; --line: #dfe3e8;
+    --accent: #1f5b45; --accent-2: #2f7a5c; --accent-soft: #e6f0ea; --panel: #f4f6f7;
+    --warm: #9a5a12; --warm-soft: #fbf1e3;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Segoe UI", "Segoe UI Variable Text", Arial, sans-serif; font-size: 9.6pt; line-height: 1.52; color: var(--ink); background: #fff; }
+  h1, h2, h3, h4, .kicker, .stat, .display { font-family: Bahnschrift, "Segoe UI", Arial, sans-serif; }
+  h2 { font-size: 20pt; font-weight: 600; line-height: 1.15; margin: 1mm 0 4mm; letter-spacing: -0.2px; break-after: avoid; }
+  h3 { font-size: 12.5pt; font-weight: 600; margin: 6mm 0 2mm; break-after: avoid; }
+  h4 { font-size: 10.5pt; font-weight: 600; margin: 0 0 1mm; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+  ol.tight li { margin-bottom: 0.4mm; }
+  a { color: var(--accent); text-decoration: none; }
+  b, strong { font-weight: 600; }
+  .kicker { font-size: 7.6pt; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--accent-2); }
+  .lede { font-size: 11pt; line-height: 1.5; color: #2c3a47; margin-bottom: 4mm; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8pt; }
+  .section { break-before: page; }
+  .keep { break-inside: avoid; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin: 2mm 0 4.5mm; break-inside: avoid; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 7.4pt; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.3px solid var(--ink); padding: 1.4mm 2mm; vertical-align: bottom; }
+  td { border-bottom: 1px solid var(--line); padding: 1.5mm 2mm; vertical-align: top; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.compact { font-size: 8pt; }
+  table.compact td { padding: 1.2mm 2mm; }
+  table.results td { padding: 1.3mm 1.8mm; }
+  table.results tr.grp td { border-top: 1.2px solid #b9c2cb; }
+  table.results tr.hl td:not(.ls) { background: var(--accent-soft); font-weight: 600; }
+  table.results td.ls { font-weight: 600; background: #fff; }
+  table.results td.ls span { font-weight: 400; color: var(--muted); font-size: 7.6pt; }
+  td.small { font-size: 7.4pt; color: var(--muted); }
+
+  figure { margin: 3mm 0 4.5mm; break-inside: avoid; }
+  figure img { width: 100%; display: block; border-radius: 1.5mm; }
+  figcaption { font-size: 8pt; color: var(--muted); margin-top: 1.6mm; line-height: 1.45; }
+  .row { display: grid; gap: 2.5mm; align-items: start; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; }
+  .card { background: var(--panel); border-radius: 3mm; padding: 3.6mm 4mm 2.8mm; break-inside: avoid; }
+  .card p { margin-bottom: 1.6mm; }
+  .card .who { font-size: 8pt; color: var(--accent); font-weight: 600; margin-bottom: 1.2mm; }
+  .card .tools { font-size: 7.8pt; color: var(--muted); }
+  .card.accent { background: var(--accent-soft); }
+  .stat { font-size: 21pt; font-weight: 600; color: var(--accent); line-height: 1.1; margin-bottom: 1mm; }
+  .stat small { font-size: 10pt; font-weight: 400; color: var(--muted); }
+  .callout { background: var(--accent-soft); border-radius: 3mm; padding: 4.5mm 6mm; margin: 4mm 0; break-inside: avoid; }
+  .callout.warm { background: var(--warm-soft); }
+  .callout .display { font-size: 13pt; font-weight: 600; color: var(--accent); line-height: 1.35; }
+  .quote { font-family: Bahnschrift, "Segoe UI", sans-serif; font-size: 14pt; line-height: 1.35; color: var(--accent); }
+  .eq { font-family: "Cambria Math", Cambria, Georgia, serif; font-size: 16pt; text-align: center; margin: 2mm 0 3mm; color: var(--ink); }
+  .eq i { font-style: italic; }
+  code, .mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 8.2pt; }
+  code { background: #edf0f2; padding: 0.2mm 1.2mm; border-radius: 1mm; }
+  pre { font-family: "Cascadia Mono", Consolas, monospace; font-size: 7.9pt; line-height: 1.5; background: #f1f4f5; padding: 3.5mm 4.5mm; border-radius: 2mm; white-space: pre-wrap; margin: 2mm 0 4mm; break-inside: avoid; }
+
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li { position: relative; padding-left: 9mm; margin-bottom: 2.6mm; break-inside: avoid; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.2mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--accent); color: #fff; font: 600 8.5pt/6mm Bahnschrift, sans-serif; text-align: center; }
+  .contrib li { margin-bottom: 2.2mm; }
+
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; list-style: none; padding: 0; margin: 2mm 0 6mm; }
+  .toc li { display: grid; grid-template-columns: 8mm 1fr; border-bottom: 1px solid var(--line); padding: 1.6mm 0; margin: 0; }
+  .toc b { font-family: Bahnschrift, sans-serif; color: var(--accent); }
+  .toc span { color: var(--muted); font-size: 8pt; display: block; }
+
+  /* charts and diagrams (inline SVG) */
+  .chart { width: 100%; height: auto; display: block; }
+  .chart text { font-family: "Segoe UI", Arial, sans-serif; font-size: 9px; fill: var(--muted); }
+  .chart .ct { font-family: Bahnschrift, "Segoe UI", sans-serif; font-size: 11px; font-weight: 600; fill: var(--ink); }
+  .chart .val { font-size: 8px; fill: var(--ink); }
+  .chart .cat { font-size: 9px; fill: var(--ink); }
+  .chart .grid { stroke: #e6e9ec; stroke-width: 1; }
+  .flow { width: 100%; height: auto; display: block; margin: 2mm 0 3mm; }
+  .flow rect { fill: #f3f6f5; stroke: #c3cfc9; stroke-width: 1.2; }
+  .flow .acc rect { fill: #e2eee7; stroke: var(--accent); }
+  .flow .dec rect { fill: #fff; stroke: #8fa39a; stroke-dasharray: 4 3; }
+  .flow text { text-anchor: middle; font-family: "Segoe UI", Arial, sans-serif; font-size: 9.2px; fill: var(--muted); }
+  .flow .bt { font-family: Bahnschrift, "Segoe UI", sans-serif; font-size: 11.5px; font-weight: 600; fill: var(--ink); }
+  .flow .lbl { font-size: 9.5px; font-weight: 600; fill: var(--accent); text-anchor: start; }
+  .flow .ln { stroke: #5b6b64; stroke-width: 1.4; fill: none; }
+
+  /* cover */
+  .cover { page: cover; width: 210mm; height: 297mm; background: #0f1f19; color: #eef3f0; display: flex; flex-direction: column; overflow: hidden; break-after: page; }
+  .cover-top { padding: 20mm 20mm 7mm; }
+  .cover-brand { display: flex; align-items: center; gap: 3.5mm; font: 600 14pt Bahnschrift, sans-serif; letter-spacing: 0.4px; }
+  .cover-brand img { width: 11mm; height: 11mm; border-radius: 2.5mm; }
+  .cover .kicker { color: #8fcaa9; margin-top: 12mm; }
+  .cover h1 { font-size: 31pt; font-weight: 600; line-height: 1.08; margin: 4mm 0 5mm; color: #fff; max-width: 165mm; letter-spacing: -0.3px; }
+  .cover-lede { font-size: 11.5pt; line-height: 1.5; color: #c3d2ca; max-width: 155mm; margin: 0; }
+  .cover-hero { margin: 0; }
+  .cover-hero img { width: 100%; display: block; }
+  .cover-bottom { padding: 0 20mm 13mm; margin-top: auto; }
+  .cover-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7mm; border-top: 1px solid #2d443a; padding-top: 6mm; }
+  .cover-facts b { display: block; font: 600 21pt Bahnschrift, sans-serif; color: #9fd6b9; line-height: 1.15; margin-bottom: 1mm; }
+  .cover-facts span { font-size: 8.4pt; color: #b3c3bb; line-height: 1.4; display: block; }
+  .cover-meta { display: flex; justify-content: space-between; margin-top: 10mm; font-size: 9pt; color: #dfe8e3; }
+  .cover-credit { margin-top: 2.5mm; font-size: 6.9pt; color: #86998f; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <div class="cover-top">
+    <div class="cover-brand"><img src="$fig_icon" alt=""><span>DepthWizard</span></div>
+    <div class="kicker">Smart India Hackathon 2026 · Problem statement SIH26175 · ISRO</div>
+    <h1>Height maps and 3D flythroughs from a single satellite image</h1>
+    <p class="cover-lede">One RGB image in. A digital surface model out, in metres when the image is georeferenced, and a 3D terrain you can fly through, measure and check against reference data. Everything runs offline on a laptop.</p>
+  </div>
+  <figure class="cover-hero"><img src="$fig_hero" alt="Namchi, South Sikkim, rendered in 3D by DepthWizard"></figure>
+  <div class="cover-bottom">
+    <div class="cover-facts">
+      <div><b>$all_b_rmse m</b><span>RMSE against LiDAR over $all_b_tiles test tiles in four landscapes (the DEM alone: $all_dem_rmse m)</span></div>
+      <div><b>${rt_depth} s</b><span>relative height for a $rt_scene_px px scene on an 8 GB laptop GPU, plus ${rt_cal} s to calibrate</span></div>
+      <div><b>Offline</b><span>a standalone desktop app: no Python, no cloud upload, no account</span></div>
+    </div>
+    <div class="cover-meta"><span>Project overview · $build_date</span><span>[Team name] · [Team ID] · [Institute]</span></div>
+    <div class="cover-credit">Cover: Namchi, South Sikkim, as a DepthWizard DSM in the 3D viewer. Imagery: Maxar Open Data Program (CC BY-NC 4.0). CartoDEM Version-3 R1, National Remote Sensing Centre, ISRO, Government of India, Hyderabad, India.</div>
+  </div>
+</section>
+
+<!-- ============================== CONTENTS + AT A GLANCE ============================== -->
+<section>
+  <div class="kicker">Contents</div>
+  <h2>What this document covers</h2>
+  <ol class="toc">
+    <li><b>1</b><div>The problem<span>Why height from one image is hard, and what ISRO asked for</span></div></li>
+    <li><b>2</b><div>Why we need it<span>Coverage, speed, cost, and India's hill towns</span></div></li>
+    <li><b>3</b><div>Use cases<span>Who can use DepthWizard, and for what</span></div></li>
+    <li><b>4</b><div>What it contributes<span>Impact and value</span></div></li>
+    <li><b>5</b><div>How it works<span>The pipeline on one page</span></div></li>
+    <li><b>6</b><div>The technology<span>Depth model, calibration, datums, viewer, desktop app</span></div></li>
+    <li><b>7</b><div>Data<span>Every dataset we use, and its licence</span></div></li>
+    <li><b>8</b><div>How we evaluate<span>Metrics, splits, and the rules against fooling ourselves</span></div></li>
+    <li><b>9</b><div>Results<span>Accuracy by landscape, runtime, failures</span></div></li>
+    <li><b>10</b><div>Case study: Namchi, Sikkim<span>The demo scene, calibrated with CartoDEM</span></div></li>
+    <li><b>11</b><div>Limitations<span>What it can't do yet</span></div></li>
+    <li><b>12</b><div>Status and roadmap<span>Where the project is, and what comes next</span></div></li>
+    <li><b>13</b><div>Credits and references</div></li>
+    <li><b>A–D</b><div>Appendices<span>Running it, repository, glossary, full results</span></div></li>
+  </ol>
+
+  <div class="kicker">At a glance</div>
+  <h3 style="margin-top:1mm">DepthWizard in six facts</h3>
+  <div class="grid3">
+    <div class="card"><h4>Input</h4><p>One RGB image: PNG, JPG or GeoTIFF. Satellite, aerial or drone. Optional: a DEM file, ground control points.</p></div>
+    <div class="card"><h4>Output</h4><p>A digital surface model as a Float32 GeoTIFF: metres above sea level (EGM2008) for georeferenced images, relative heights (0 to 1) for plain photos.</p></div>
+    <div class="card"><h4>Core idea</h4><p>A 30 m DEM supplies the terrain. A depth network supplies the detail the DEM can't see. The DEM also sets the network's scale.</p></div>
+    <div class="card accent"><div class="stat">$all_b_rmse <small>m RMSE</small></div><p>over $all_b_tiles LiDAR test tiles (urban, sparse, hilly, forested). The DEM alone: $all_dem_rmse m. Correlation $all_dem_r → $all_b_r.</p></div>
+    <div class="card accent"><div class="stat">${rt_depth} <small>s</small></div><p>GPU time for relative height on a $rt_scene_px px scene ($device), plus ${rt_cal} s to calibrate. It also runs on a CPU, more slowly.</p></div>
+    <div class="card"><h4>Delivery</h4><p>A desktop app (Tauri + bundled Python backend) with a Three.js flythrough viewer. Also runs as a local web app. Fully offline.</p></div>
+  </div>
+  <p class="small muted" style="margin-top:3mm">Every accuracy number in this document is filled in from evaluation run <span class="mono">$run_id</span> in <span class="mono">evals/results/</span>; none is typed by hand.</p>
+</section>
+
+<!-- ============================== 1. PROBLEM ============================== -->
+<section class="section">
+  <div class="kicker">1 · The problem</div>
+  <h2>Height is the missing dimension in most imagery</h2>
+  <p class="lede">A satellite image shows where things are. It doesn't show how tall they are. Yet many decisions depend on height: whether floodwater will reach a house, whether a new tower blocks a radio link, how much shade falls on a roof, how steep a hillside is before a road is cut into it.</p>
+
+  <h3>How elevation is measured today</h3>
+  <table class="compact">
+    <thead><tr><th style="width:21%">Method</th><th style="width:42%">How it works</th><th>Limits</th></tr></thead>
+    <tbody>
+      <tr><td><b>Stereo photogrammetry</b></td><td>Two or more images of the same place from different angles; height comes from the parallax between them. CartoDEM was made this way from Cartosat-1 stereo pairs.</td><td>Needs a stereo pair taken close in time, careful image matching and specialist software. Struggles in shadows and on uniform surfaces.</td></tr>
+      <tr><td><b>Airborne LiDAR</b></td><td>A laser scanner on an aircraft or drone measures distances directly, many points per square metre.</td><td>The most accurate option, but every survey is a flight campaign with permissions, cost and processing. Coverage is patchy and goes out of date.</td></tr>
+      <tr><td><b>Radar interferometry (InSAR)</b></td><td>Phase differences between radar acquisitions. SRTM and TanDEM-X were made this way.</td><td>Global, but the free products are posted at about 30 m. Individual buildings aren't resolved, and processing is heavy.</td></tr>
+      <tr><td><b>Global DEMs</b> (SRTM, Copernicus GLO-30, CartoDEM)</td><td>Ready-made, free elevation grids at about 30 m.</td><td>A 30 m cell is wider than most buildings. Hills and valleys are there; buildings, trees and streets are not.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why a single image is hard</h3>
+  <p>Height from one image is ill-posed: many surfaces can produce the same picture. Depth networks learn strong priors from millions of photos, but three things get in the way for satellite imagery:</p>
+  <ul>
+    <li><b>The viewpoint is unusual.</b> The networks are trained mostly on ground-level photos, where the camera looks across a scene. A satellite looks straight down.</li>
+    <li><b>The output has no units.</b> The network says what is nearer and what is farther, not by how many metres.</li>
+    <li><b>The network doesn't know where the image is.</b> It can't tie heights to sea level or to the ground around them.</li>
+  </ul>
+
+  <h3>What ISRO asked for</h3>
+  <p>Problem statement SIH26175 asks for a pipeline that:</p>
+  <ol class="tight">
+    <li>takes one RGB image (PNG, JPG or GeoTIFF) and outputs a DSM in a standard geospatial format;</li>
+    <li>gives a relative DSM for images without location data;</li>
+    <li>gives an absolute DSM in metres for georeferenced images, scaled with a coarser DEM such as SRTM, or GCPs;</li>
+    <li>drapes the image over a 3D mesh, with first-person navigation and tools to check heights and slopes;</li>
+    <li>lets users upload imagery and compare estimated heights with reference data;</li>
+    <li>ships as a standalone application with full source and documentation.</li>
+  </ol>
+  <p><b>Scoring:</b> 50 % DSM accuracy (RMSE, MAE and correlation against LiDAR, stable across urban, sparse, hilly and forested land); 50 % visualisation (projection accuracy, visual quality, navigation, interface, stability, standalone deployment).</p>
+</section>
+
+<!-- ============================== 2. WHY ============================== -->
+<section class="section">
+  <div class="kicker">2 · Why we need it</div>
+  <h2>India already has the ingredients. The missing piece is building-level height.</h2>
+  <p class="lede">ISRO's Cartosat satellites image the country at metre and sub-metre resolution, and NRSC distributes CartoDEM, a national 30 m elevation model, through Bhuvan. Between the two sits a gap: the DEM can't see a house, and a single image doesn't measure one. DepthWizard fills that gap with software, using data that already exists.</p>
+  <div class="grid2">
+    <div class="card"><h4>Coverage</h4><p>High-resolution surface models from LiDAR or stereo exist only where a survey was flown or a stereo pair was acquired, and they age as towns grow. A single new image is usually the first, and often the only, fresh data after a change on the ground.</p></div>
+    <div class="card"><h4>Speed</h4><p>After a flood, landslide or earthquake, responders need a current picture of what stands where. A single-image height model can be produced minutes after the image arrives. Planning a new LiDAR flight or stereo acquisition takes far longer.</p></div>
+    <div class="card"><h4>Cost and skills</h4><p>Photogrammetric processing needs trained staff and specialist software. DepthWizard needs one image, a free DEM and a laptop with a gaming-class GPU. The whole pipeline is a single button.</p></div>
+    <div class="card"><h4>Hill and mountain towns</h4><p>In the Himalaya, the North-East and the Western Ghats, towns sit on steep slopes. There the DEM gets the mountain right and the buildings wrong. That's the case DepthWizard is built for: terrain from the DEM, detail from the image.</p></div>
+  </div>
+  <div class="callout">
+    <div class="quote">"The DEM gives us the terrain. The model gives us what a 30 m DEM can't see."</div>
+    <p class="muted" style="margin:2mm 0 0">This is the design principle behind every part of the pipeline. The network is never trusted with the big shapes (hills, valleys, the height of the whole scene). It only adds local detail on top of a DEM, and the DEM decides how much.</p>
+  </div>
+  <h3>Why not just use the depth network?</h3>
+  <p>Because its metres are invented. A raw network output stretched to the DEM's range (our "Method A" baseline) gets hills wrong, because the network confuses slope with height. On our test tiles it is several times worse than simply using the DEM (appendix D). Keeping the DEM's terrain and adding only calibrated detail (our "Method B") is what makes the result usable.</p>
+  <h3>Why not just use the DEM?</h3>
+  <p>Because the DEM is the baseline to beat, and we report it everywhere. A 30 m DEM already captures most of the terrain height, so any honest method must show what it adds on top: sharper buildings, tree crowns, street canyons, and a better match to LiDAR where those features matter. Section 9 shows exactly that, landscape by landscape, including where we add nothing.</p>
+</section>
+
+<!-- ============================== 3. USE CASES ============================== -->
+<section class="section">
+  <div class="kicker">3 · Use cases</div>
+  <h2>Who can use it, and for what</h2>
+  <p class="lede">Anyone who has imagery but no current surface model. The cards list the users, what DepthWizard gives them, and the tools they would reach for. Survey teams can also use the Validate tool to check any DSM against a reference.</p>
+  <div class="grid2">
+    <div class="card"><h4>Disaster response and flood risk</h4><div class="who">NDMA, state disaster authorities, district cells, relief agencies</div><p>Building-level heights from a fresh image: which structures rise above an expected flood level, how a landslide-hit slope looks in 3D for briefing teams, and how the surface changed between two dates.</p><div class="tools">Height readout · elevation profiles · slope map · GeoTIFF for GIS models</div></div>
+    <div class="card"><h4>Urban planning and building control</h4><div class="who">Town planning departments, municipal corporations, Smart City teams</div><p>Approximate building heights to check against height limits, flag possible extra floors for field verification, and give 3D context to proposals.</p><div class="tools">DSM GeoTIFF in QGIS / ArcGIS · height readout · flythrough</div></div>
+    <div class="card"><h4>Telecom and line of sight</h4><div class="who">Tower and microwave-link planners</div><p>Surface profiles along a proposed link show the buildings and trees in its path before anyone climbs a roof.</p><div class="tools">Elevation profile with CSV export</div></div>
+    <div class="card"><h4>Rooftop solar and urban heat</h4><div class="who">Energy agencies, researchers, city climate cells</div><p>Building and tree heights are the input for shadow and solar-exposure models, and for urban heat-island studies.</p><div class="tools">DSM GeoTIFF</div></div>
+    <div class="card"><h4>Forests and green cover</h4><div class="who">Forest departments, ecologists</div><p>Relative canopy height and canopy gaps from one image, as a quick screen before field plots. Published work (Depth Any Canopy) fine-tunes the same model family for canopy height.</p><div class="tools">Relative or absolute DSM · error map against field LiDAR</div></div>
+    <div class="card"><h4>Roads, rail and pipelines</h4><div class="who">Infrastructure planners, especially in hilly states</div><p>Slope maps and profiles along a candidate alignment, previewed in 3D before a ground survey is commissioned.</p><div class="tools">Slope map · profiles · fly mode</div></div>
+    <div class="card"><h4>Terrain familiarisation</h4><div class="who">Agencies working with sensitive imagery</div><p>A 3D flythrough of an area from one image, produced entirely on an offline laptop. The imagery never leaves the machine.</p><div class="tools">Desktop app · fly mode · no network needed</div></div>
+    <div class="card"><h4>Education and outreach</h4><div class="who">Schools, universities, science centres</div><p>Turn any satellite or drone image into a terrain students can fly through, and show honestly what the numbers mean, including the difference between relative and absolute height.</p><div class="tools">Viewer · relative mode for plain photos</div></div>
+  </div>
+</section>
+
+<!-- ============================== 4. CONTRIBUTION ============================== -->
+<section class="section">
+  <div class="kicker">4 · What it contributes</div>
+  <h2>Impact and value</h2>
+  <ol class="steps contrib">
+    <li><b>It makes existing assets go further.</b> Any georeferenced optical image plus CartoDEM (or Copernicus GLO-30, or SRTM) becomes a building-level surface model. No new sensor, no new flight, no stereo pair.</li>
+    <li><b>It's honest by design.</b> Every output records where its metres came from: the calibration method, a confidence level, the DEM and its vertical datum. Plain images without a location get a relative model; we never invent metres. The evaluation always shows the DEM-only baseline next to our result, and our worst tiles next to our best.</li>
+    <li><b>It's fast and cheap.</b> ${rt_depth} s of GPU time for relative height and ${rt_cal} s to calibrate a $rt_scene_px px scene on an 8 GB laptop GPU. The same code runs on a CPU when there's no GPU.</li>
+    <li><b>It's offline and self-contained.</b> The desktop app bundles the model, the backend and the viewer. No internet, no cloud upload, no account. The only optional network use is a one-time download of the Copernicus DEM tile for a new area.</li>
+    <li><b>It uses standard formats.</b> The DSM is a Float32 GeoTIFF with calibration tags, so it opens in QGIS, ArcGIS or any GDAL tool and can feed flood, solar or line-of-sight models. The viewer bundle follows a documented, versioned contract.</li>
+    <li><b>It gets datums right.</b> We found that CartoDEM V3R1 heights are measured from the WGS84 ellipsoid, not sea level: at Namchi they sit about 46 m below Copernicus GLO-30, which matches the EGM2008 geoid height there (−43.8 m). DepthWizard converts CartoDEM automatically, so CartoDEM-calibrated results agree with other sea-level products.</li>
+    <li><b>Its parts are reusable.</b> Seamless tiled depth for very large images, DEM and datum handling, a scale-source chain with confidence labels, and a leak-proof evaluation harness are all separate modules with tests.</li>
+    <li><b>It's open.</b> The depth model is Apache-2.0. Evaluation uses public data. The code, the documentation and the evaluation runs are all in the repository.</li>
+  </ol>
+  <h3>Where it fits in existing workflows</h3>
+  <div class="grid3">
+    <div class="card"><h4>Before</h4><p>Image on one screen, a 30 m DEM on another. Heights of buildings are guessed, measured in the field, or waited for.</p></div>
+    <div class="card accent"><h4>With DepthWizard</h4><p>Drop the image in, get a DSM in under a minute, fly through it, measure heights and slopes, export the GeoTIFF.</p></div>
+    <div class="card"><h4>Downstream</h4><p>The GeoTIFF goes into GIS analysis, flood models, planning reviews or reports; the flythrough goes into briefings.</p></div>
+  </div>
+</section>
+
+<!-- ============================== 5. HOW IT WORKS ============================== -->
+<section class="section">
+  <div class="kicker">5 · How it works</div>
+  <h2>The pipeline on one page</h2>
+  <svg class="flow" viewBox="0 0 700 240" role="img" aria-label="DepthWizard pipeline">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5b6b64"/></marker></defs>
+    <g><rect x="10" y="10" width="120" height="62" rx="8"/><text x="70" y="37" class="bt">RGB image</text><text x="70" y="54">PNG · JPG · GeoTIFF</text></g>
+    <g><rect x="150" y="10" width="120" height="62" rx="8"/><text x="210" y="33" class="bt">1 · Read</text><text x="210" y="49">RGB bands, 8-bit stretch</text><text x="210" y="61">reproject to UTM</text></g>
+    <g class="acc"><rect x="290" y="10" width="120" height="62" rx="8"/><text x="350" y="33" class="bt">2 · Relative height</text><text x="350" y="49">Depth Anything V2</text><text x="350" y="61">global pass + tiles</text></g>
+    <g><rect x="430" y="10" width="120" height="62" rx="8"/><text x="490" y="33" class="bt">Stitch</text><text x="490" y="49">align tiles to the</text><text x="490" y="61">global pass, blend</text></g>
+    <g class="dec"><rect x="570" y="10" width="120" height="62" rx="8"/><text x="630" y="37" class="bt">Georeferenced?</text><text x="630" y="54">CRS + transform</text></g>
+    <g class="acc"><rect x="570" y="150" width="120" height="62" rx="8"/><text x="630" y="173" class="bt">3 · Calibrate</text><text x="630" y="189">DEM (+ GCPs) → metres</text><text x="630" y="201">DSM = D + s · detail</text></g>
+    <g><rect x="430" y="150" width="120" height="62" rx="8"/><text x="490" y="177" class="bt">Relative DSM</text><text x="490" y="194">0 to 1, no metres</text></g>
+    <g><rect x="290" y="150" width="120" height="62" rx="8"/><text x="350" y="173" class="bt">4 · Export</text><text x="350" y="189">dsm.tif (GeoTIFF)</text><text x="350" y="201">+ viewer bundle</text></g>
+    <g class="acc"><rect x="150" y="150" width="120" height="62" rx="8"/><text x="210" y="173" class="bt">5 · 3D viewer</text><text x="210" y="189">fly, measure heights,</text><text x="210" y="201">slopes, profiles</text></g>
+    <g><rect x="10" y="150" width="120" height="62" rx="8"/><text x="70" y="173" class="bt">Validate</text><text x="70" y="189">RMSE, MAE, r</text><text x="70" y="201">error heatmap</text></g>
+    <line class="ln" x1="130" y1="41" x2="148" y2="41" marker-end="url(#ah)"/>
+    <line class="ln" x1="270" y1="41" x2="288" y2="41" marker-end="url(#ah)"/>
+    <line class="ln" x1="410" y1="41" x2="428" y2="41" marker-end="url(#ah)"/>
+    <line class="ln" x1="550" y1="41" x2="568" y2="41" marker-end="url(#ah)"/>
+    <line class="ln" x1="640" y1="72" x2="640" y2="148" marker-end="url(#ah)"/><text class="lbl" x="646" y="114">yes</text>
+    <line class="ln" x1="600" y1="72" x2="515" y2="148" marker-end="url(#ah)"/><text class="lbl" x="530" y="108">no</text>
+    <line class="ln" x1="430" y1="181" x2="412" y2="181" marker-end="url(#ah)"/>
+    <path class="ln" d="M630,212 V228 H350 V214" marker-end="url(#ah)"/>
+    <line class="ln" x1="290" y1="181" x2="272" y2="181" marker-end="url(#ah)"/>
+    <line class="ln" x1="150" y1="181" x2="132" y2="181" marker-end="url(#ah)"/>
+  </svg>
+  <ol class="steps">
+    <li><b>Read.</b> The image is read with rasterio. Multi-band or 16-bit images are reduced to RGB and stretched to 8-bit; images in latitude/longitude are reprojected to the local UTM zone so pixels are square and measured in metres.</li>
+    <li><b>Relative height.</b> Depth Anything V2 (Small) predicts relative height twice: once over the whole image at low resolution, and again on overlapping full-resolution tiles. Each tile is aligned to the whole-image pass and blended with its neighbours, so a 4096 × 4096 image comes out without seams.</li>
+    <li><b>Calibrate.</b> For a georeferenced image, the DEM for that area (a local file, or Copernicus GLO-30 downloaded once and cached) is resampled onto the image grid. The DSM keeps the DEM's terrain and adds the network's fine detail, scaled to metres by ground control points or by the DEM itself.</li>
+    <li><b>Export.</b> A full-resolution Float32 GeoTIFF with calibration tags, plus a compact bundle for the viewer (a height grid, the image, a mask of filled gaps, and metadata).</li>
+    <li><b>Explore and check.</b> The viewer drapes the image over the terrain: orbit or fly, click for heights, draw profiles, colour by slope, and upload a reference DSM to see the error.</li>
+  </ol>
+
+  <h3>The key idea in one picture</h3>
+  <div class="row" style="grid-template-columns: 1024fr 2072fr">
+    <img src="$fig_namchi_rgb" alt="Namchi image, 1 km crop" style="width:100%;border-radius:1.5mm">
+    <img src="$fig_namchi_zoom" alt="CartoDEM and DepthWizard DSM, hillshaded" style="width:100%;border-radius:1.5mm">
+  </div>
+  <p class="small muted" style="margin-top:1.6mm">The same 1 km × 1 km of Namchi, South Sikkim. <b>Left:</b> the image. <b>Middle:</b> CartoDEM on its own, hillshaded: 30 m cells, the ridge is there, the town is not. <b>Right:</b> DepthWizard's DSM: the same terrain, plus individual buildings, terraces and roads. Imagery: Maxar Open Data Program (CC BY-NC 4.0); CartoDEM V3R1, NRSC, ISRO.</p>
+</section>
+
+<!-- ============================== 6. TECHNOLOGY ============================== -->
+<section class="section">
+  <div class="kicker">6 · The technology</div>
+  <h2>Inside each stage</h2>
+
+  <h3>6.1 Reading the image</h3>
+  <ul>
+    <li>Accepts <code>.png .jpg .jpeg .tif .tiff</code>. A file is georeferenced when it has a CRS and a real geotransform.</li>
+    <li>Bands 1–3 are taken as RGB (configurable); palette images are expanded; 16-bit or multi-band data is stretched per band between the 2nd and 98th percentiles.</li>
+    <li>Geographic images (EPSG:4326 and similar) are reprojected to the UTM zone of the scene centre with bilinear resampling, keeping the native ground resolution.</li>
+    <li>GeoTIFF nodata and alpha masks are honoured and carried through to the viewer as holes. Images longer than 12 000 px on a side are downsampled with a warning.</li>
+  </ul>
+
+  <h3>6.2 Relative height with Depth Anything V2</h3>
+  <p><b>The model.</b> Depth Anything V2 Small (<code>depth-anything/Depth-Anything-V2-Small-hf</code>, Apache-2.0) pairs a DINOv2 vision-transformer encoder with a DPT decoder, about 25 million parameters in all. It was trained on precise synthetic depth and then on large numbers of pseudo-labelled real photos, which makes it strong at fine detail. It predicts relative inverse depth: for a camera looking straight down, larger means closer to the camera, which means taller. We check this polarity on GAMUS height-above-ground tiles.</p>
+  <p><b>Why Small.</b> It fits an 8 GB laptop GPU with room to spare, its licence allows any use (the larger checkpoints are non-commercial), and published remote-sensing work fine-tunes it successfully.</p>
+  <table class="compact">
+    <thead><tr><th style="width:32%">Step</th><th>What we do</th></tr></thead>
+    <tbody>
+      <tr><td>Global pass</td><td>Resize the whole image to 1036 px on its long side (a multiple of the 14 px ViT patch), predict, upsample to full resolution. This pass sees the whole scene and fixes the large-scale shape.</td></tr>
+      <tr><td>Tiles</td><td>518 × 518 px at native resolution, stride 259 (50 % overlap), batches of 8 in fp16. On a GPU out-of-memory error the batch size halves; on a CPU the model runs in fp32.</td></tr>
+      <tr><td>Alignment</td><td>Each tile's prediction <i>t</i> gets a scale and shift (α, β) so that α·<i>t</i> + β matches the global pass. The fit starts from a robust median/MAD estimate, then refits twice dropping the 5 % largest residuals, so a few odd pixels can't collapse the slope.</td></tr>
+      <tr><td>Blending</td><td>Aligned tiles are summed under a 2D Hann (sin²) window and divided by the summed weights; the window stays flat at the image border so edges aren't darkened.</td></tr>
+      <tr><td>Seam check</td><td>On a 4096 × 4096 Denver scene, the height gradient along tile borders is 0.83 times the gradient inside tiles: below 1, so there are no visible seams.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.3 Calibration: from relative height to metres</h3>
+  <p>The DEM <i>D</i> is resampled onto the image grid. The relative height <i>d</i> is split into a smooth part and a detail part with a Gaussian blur whose width matches the DEM's cell size:</p>
+  <div class="eq">DSM = <i>D</i> + <i>s</i> · <i>d</i><sub>high</sub>, &nbsp;&nbsp; <i>d</i><sub>high</sub> = <i>d</i> − G<sub>σ</sub>(<i>d</i>), &nbsp;&nbsp; σ = <i>k</i> · DEM cell / pixel size</div>
+  <p>A 30 m surface DEM is roughly a low-pass version of the true surface, so the network only has to supply the high-frequency part. <i>k</i> = 1.0, tuned on the validation split (the physical argument gives 0.5; a wider σ would count mid-sized features twice). The scale <i>s</i>, in metres per unit of relative height, comes from the first source available:</p>
+  <table class="compact">
+    <thead><tr><th style="width:18%">Source</th><th>How s is found</th><th style="width:13%">Confidence</th><th style="width:17%">Status</th></tr></thead>
+    <tbody>
+      <tr><td><b>Ground control points</b></td><td>Height above the DEM at each point against the detail there; least-squares fit. At least 3 points, CSV in image coordinates or lon/lat.</td><td>high</td><td>built</td></tr>
+      <tr><td><b>OSM building heights</b></td><td>Median ratio of tagged building heights to detail inside each footprint, at least 10 buildings.</td><td>medium</td><td>designed, not built</td></tr>
+      <tr><td><b>DEM band</b></td><td>The DEM itself resolves detail from its cell size up to a few cells. Both <i>d</i> and <i>D</i> are averaged to DEM cells and high-passed the same way; the slope of <i>D</i>'s detail against <i>d</i>'s is the scale, used only if they correlate (r ≥ 0.1 over at least 64 cells).</td><td>medium</td><td>built; the usual source</td></tr>
+      <tr><td><b>DEM relief</b></td><td>The slope of a global affine fit, for very rough terrain.</td><td>medium</td><td>switched off by tuning</td></tr>
+      <tr><td><b>Scene prior</b></td><td>A fixed height for the 98th percentile of the detail. Tuned to 0 m: when nothing else applies, the DSM is the DEM and says so.</td><td>low</td><td>fallback</td></tr>
+    </tbody>
+  </table>
+  <p><b>Why the DEM band works.</b> Where the network and the DEM agree about the detail they can both see, the network's scale is trustworthy and it adds its finer detail. Where they disagree (flat farmland where the network invents relief, for example), the correlation gate fails and DepthWizard falls back to the DEM instead of adding noise. This is why hilly and sparse scenes come out level with the DEM rather than worse.</p>
+  <p><b>Method A, the baseline.</b> Average <i>d</i> down to the DEM grid and fit <i>D</i> ≈ <i>a</i>·<i>d</i> + <i>b</i> with a Huber loss. Simple, and badly wrong on hills, where the network mixes up slope and height. It is reported for comparison only.</p>
+
+  <h3>6.4 Vertical datums</h3>
+  <p>Heights are only comparable when they share a reference surface. DepthWizard records the datum of every source and converts where needed.</p>
+  <table class="compact">
+    <thead><tr><th>Source</th><th>Vertical datum</th><th>What DepthWizard does</th></tr></thead>
+    <tbody>
+      <tr><td>CartoDEM V3R1 (NRSC)</td><td>WGS84 ellipsoid (measured at Namchi)</td><td>Converted to EGM2008 sea-level heights with the NGA 2.5′ geoid grid</td></tr>
+      <tr><td>Copernicus GLO-30</td><td>EGM2008</td><td>Used as is (the default output datum)</td></tr>
+      <tr><td>SRTM / NASADEM</td><td>EGM96</td><td>Recorded in the output metadata</td></tr>
+      <tr><td>USGS 3DEP LiDAR (evaluation truth)</td><td>NAVD88</td><td>Offset-free RMSE reported alongside raw RMSE</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.5 Relative mode</h3>
+  <p>Without a georeference there are no metres, and DepthWizard doesn't pretend otherwise. The relative DSM is <i>d</i> rescaled so its 1st and 99th percentiles map to 0 and 1, exported as a GeoTIFF without a CRS. The viewer shows heights as percentages and labels slopes as uncalibrated. If the user enters a ground sample distance, horizontal distances become approximate metres, flagged as "approximate scale".</p>
+
+  <h3>6.6 Outputs</h3>
+  <table class="compact">
+    <thead><tr><th style="width:22%">File</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><code>dsm.tif</code></td><td>Full-resolution Float32 GeoTIFF, nodata −9999, LZW-compressed and tiled, with tags <code>DW_MODE</code>, <code>DW_CAL_METHOD</code>, <code>DW_CAL_CONFIDENCE</code>, <code>DW_DEM_SOURCE</code>, <code>DW_VERSION</code></td></tr>
+      <tr><td><code>meta.json</code></td><td>Grid size, pixel size, height range, units, bounds, CRS, and the calibration record (method, confidence, DEM source and datum, scale)</td></tr>
+      <tr><td><code>dsm.bin</code></td><td>The viewer's height grid: little-endian Float32, row-major, area-averaged to at most 2048 px per side, gaps filled from the nearest valid cell</td></tr>
+      <tr><td><code>ortho.png</code> · <code>mask.png</code></td><td>The image (at most 4096 px per side) and a mask of the filled cells, shown as holes</td></tr>
+      <tr><td><code>error.bin</code> · <code>reference.bin</code></td><td>Written by Validate: the error grid and the reference resampled onto the viewer grid</td></tr>
+      <tr><td><code>run.json</code></td><td>Timings per stage, warnings, the device used, and the full configuration of the run</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.7 Backend</h3>
+  <p>A FastAPI service loads the model once at startup and runs jobs one at a time on a worker thread (there is one GPU). Jobs live in their own folders and survive restarts.</p>
+  <table class="compact">
+    <thead><tr><th style="width:10%">Method</th><th style="width:34%">Path</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td>POST</td><td><code>/api/jobs</code></td><td>Upload an image, and optionally a DEM, GCPs and a ground sample distance; returns a job id</td></tr>
+      <tr><td>GET</td><td><code>/api/jobs</code></td><td>Every finished result, newest first (the viewer's Terrains list)</td></tr>
+      <tr><td>GET</td><td><code>/api/jobs/{id}</code></td><td>Status, stage, progress and message</td></tr>
+      <tr><td>GET</td><td><code>/api/jobs/{id}/bundle/{file}</code></td><td>The viewer bundle files</td></tr>
+      <tr><td>GET</td><td><code>/api/jobs/{id}/dsm.tif</code></td><td>The full-resolution GeoTIFF</td></tr>
+      <tr><td>POST</td><td><code>/api/jobs/{id}/validate</code></td><td>Upload a reference DSM; returns full-resolution metrics and writes the error grid</td></tr>
+      <tr><td>GET</td><td><code>/api/health</code></td><td>Whether the model is loaded, and on which device</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="section">
+  <div class="kicker">6 · The technology (continued)</div>
+  <h3 style="margin-top:1mm">6.8 The viewer</h3>
+  <p>The 3D viewer is <b>stratum</b>, an offline Three.js terrain workspace (TypeScript, Vite, a web worker for mesh building), extended with a small, logged DepthWizard module. From stratum: orbit and pointer-lock flight (WASD), height inspection on hover and click, slope and elevation colouring, hillshade and contour lines, vertical exaggeration, elevation profiles with CSV export, and reference RMSE/MAE with an error heatmap. Added by DepthWizard: <b>Process image</b> (upload and progress), <b>Terrains</b> (switch between every result on the computer), <b>Validate</b> (server-side metrics at full resolution), a calibration panel, a GeoTIFF download link, percentage readouts and an "approximate scale" label for relative results.</p>
+  <figure><img src="$fig_app" alt="DepthWizard viewer showing Namchi"><figcaption>The app with the Namchi result open. Left: the calibration record (method, confidence, DEM), resolution and the GeoTIFF download. Centre: the terrain in 3D, with Orbit, Fly and Draw profile. Imagery: Maxar Open Data Program (CC BY-NC 4.0); CartoDEM V3R1, NRSC, ISRO.</figcaption></figure>
+  <div class="grid2" style="align-items:start">
+    <figure style="margin-top:0"><img src="$fig_terrains" alt="The Terrains dialog"><figcaption>Terrains: every result processed on this computer, newest first, plus a built-in sample.</figcaption></figure>
+    <div>
+      <h3 style="margin-top:0">6.9 The desktop app</h3>
+      <p>A Tauri 2 window (Rust, the system WebView2) starts the backend, a PyInstaller build of the Python service with the model, the viewer and the geoid grid inside, on <code>127.0.0.1</code>, and stops it when the window closes. The target machine needs no Python. Results and caches go to the user's app-data folder, so the program folder stays read-only.</p>
+      <p>It ships as a portable folder of about 4.7 GB, almost all of it PyTorch with CUDA; without a GPU it runs on the CPU. The same backend also runs as a local web app (<code>run_local.bat</code>).</p>
+    </div>
+  </div>
+
+  <h3>6.10 Technology stack</h3>
+  <table class="compact">
+    <thead><tr><th style="width:22%">Layer</th><th>Tools</th></tr></thead>
+    <tbody>
+      <tr><td>Depth model</td><td>PyTorch 2.11 (CUDA 12.8, fp16), Hugging Face Transformers, Depth Anything V2 Small</td></tr>
+      <tr><td>Geospatial</td><td>rasterio / GDAL 3.12, pyproj, NGA EGM2008 geoid grid</td></tr>
+      <tr><td>Numerics</td><td>NumPy, SciPy (robust fits, Huber loss), OpenCV (resampling, blurs)</td></tr>
+      <tr><td>Backend</td><td>FastAPI, uvicorn, one background GPU worker</td></tr>
+      <tr><td>Viewer</td><td>stratum: Three.js 0.180, TypeScript 5.8, Vite 6, web worker</td></tr>
+      <tr><td>Desktop</td><td>Tauri 2 (Rust), PyInstaller one-folder backend, WebView2</td></tr>
+      <tr><td>Evaluation data access</td><td>Microsoft Planetary Computer STAC (NAIP, 3DEP), Hugging Face Hub (GAMUS), AWS open data (Copernicus DEM)</td></tr>
+      <tr><td>Quality</td><td>pytest (pipeline, calibration, config, API, CPU-only), Playwright contract tests for the viewer, ruff</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.11 How we keep it correct</h3>
+  <ul>
+    <li><b>Unit and integration tests</b> for reading, tiling and stitching, calibration (synthetic scenes with known answers), datums and masks, metrics, the bundle format, the API (including corrupt uploads) and CPU-only runs.</li>
+    <li><b>A viewer contract suite</b> (17 browser checks) loads synthetic bundles with known geometry: a 100 m cone must read 100 m at its peak and 14° on its flank, north must point the right way, relative results must show percentages, validation against itself must give zero error, and a 4096 × 4096 input must stay interactive.</li>
+    <li><b>Every setting in one config file</b>, type-checked when loaded, and saved with every evaluation run.</li>
+    <li><b>A no-leak rule, enforced by a test:</b> the calibration code never imports the evaluation code, so reference LiDAR can't reach the pipeline.</li>
+  </ul>
+</section>
+
+<!-- ============================== 7. DATA ============================== -->
+<section class="section">
+  <div class="kicker">7 · Data</div>
+  <h2>Every dataset, what it's for, and its licence</h2>
+  <table class="compact">
+    <thead><tr><th style="width:21%">Data</th><th style="width:20%">Provider</th><th>Used for</th><th style="width:11%">Resolution</th><th style="width:17%">Licence</th></tr></thead>
+    <tbody>
+      <tr><td><b>Depth Anything V2 Small</b></td><td>Yang et al., Hugging Face</td><td>Relative height, all modes</td><td>n/a</td><td>Apache-2.0</td></tr>
+      <tr><td><b>CartoDEM V3R1</b></td><td>NRSC, ISRO (Bhuvan)</td><td>Calibration for Indian scenes</td><td>1″ (~30 m)</td><td>NRSC single-user; not redistributed</td></tr>
+      <tr><td><b>Copernicus DEM GLO-30</b></td><td>ESA, AWS open data</td><td>Default calibration DEM, fetched once per area</td><td>1″ (~30 m)</td><td>Copernicus DEM licence</td></tr>
+      <tr><td><b>EGM2008 geoid grid</b></td><td>NGA, via PROJ data</td><td>Converting ellipsoidal heights to sea level</td><td>2.5′</td><td>Public domain</td></tr>
+      <tr><td><b>NAIP imagery</b></td><td>USDA, via Planetary Computer</td><td>Evaluation images (aerial)</td><td>0.3–0.6 m</td><td>Public domain</td></tr>
+      <tr><td><b>USGS 3DEP LiDAR DSM/DTM</b></td><td>USGS, via Planetary Computer</td><td>Evaluation truth only; never seen by calibration</td><td>2 m</td><td>Public domain</td></tr>
+      <tr><td><b>GAMUS</b></td><td>earthflow/GAMUS, Hugging Face</td><td>Relative-mode evaluation; fine-tuning (in progress)</td><td>1024 px tiles</td><td>CC-BY-4.0</td></tr>
+      <tr><td><b>Namchi, WorldView-3</b></td><td>Maxar Open Data Program</td><td>Demo scene (India)</td><td>0.3 m</td><td>CC BY-NC 4.0</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why these datasets</h3>
+  <ul>
+    <li><b>An accuracy test needs matching truth.</b> NAIP aerial images and USGS 3DEP LiDAR cover the same places, are public, and span all four landscapes the brief names. They are aerial, not satellite; we say so wherever the numbers appear.</li>
+    <li><b>GAMUS is the brief's recommended dataset</b>: aerial RGB tiles with height above ground from three US cities. It has no georeference, so it tests relative mode (scale-aligned) and supplies training data for fine-tuning.</li>
+    <li><b>India is shown qualitatively.</b> We found no public LiDAR for Indian cities, so Indian scenes carry no accuracy claims. With ISRO reference data, the same evaluation harness would produce them.</li>
+    <li><b>No leakage.</b> Urban test sites are outside Washington DC, New York and Philadelphia, the GAMUS cities, so a GAMUS-fine-tuned model is never scored on the cities it trained on.</li>
+  </ul>
+
+  <h3>Evaluation sites (NAIP + USGS 3DEP)</h3>
+  <p>Each site is a 4096 × 4096 px scene cut into a 4 × 4 grid of 1024 px tiles. The northern row of tiles is the validation split; the other three rows are the test split. The assignment was fixed before any metric was computed.</p>
+  $sites_table
+</section>
+
+<!-- ============================== 8. EVALUATION ============================== -->
+<section class="section">
+  <div class="kicker">8 · How we evaluate</div>
+  <h2>Numbers we can defend</h2>
+  <p class="lede">Half the score is accuracy, so the evaluation is built so that we can't fool ourselves: fixed splits, tuning on validation only, the DEM-only baseline in every table, and failures shown with the same prominence as wins.</p>
+
+  <h3>Metrics</h3>
+  <p>The reference is reprojected onto the prediction grid (bilinear); only pixels valid in both count. The error is <i>e</i> = prediction − reference.</p>
+  <table class="compact">
+    <thead><tr><th style="width:18%">Metric</th><th style="width:36%">Definition</th><th>Why we report it</th></tr></thead>
+    <tbody>
+      <tr><td>RMSE</td><td>√ mean(<i>e</i>²)</td><td>Asked for by ISRO</td></tr>
+      <tr><td>MAE</td><td>mean |<i>e</i>|</td><td>Asked for by ISRO</td></tr>
+      <tr><td>Pearson r</td><td>correlation of prediction and reference</td><td>Asked for by ISRO; the only fair metric in relative mode</td></tr>
+      <tr><td>Bias</td><td>mean(<i>e</i>)</td><td>Exposes datum and scale offsets</td></tr>
+      <tr><td>NMAD</td><td>1.4826 × median |<i>e</i> − median(<i>e</i>)|</td><td>The standard outlier-resistant measure in DEM accuracy work</td></tr>
+      <tr><td>Offset-free RMSE</td><td>RMSE after removing median(<i>e</i>)</td><td>Separates datum mismatch from shape error</td></tr>
+      <tr><td>nDSM RMSE</td><td>RMSE of height above ground, on pixels where the reference object is taller than 2.5 m</td><td>Measures buildings and trees, not terrain</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Splits and rules</h3>
+  <div class="grid2">
+    <div class="card"><h4>Splits</h4><p><b>quick</b>: 5 validation tiles, run after every change. <b>val</b>: the northern tile rows, for tuning. <b>test</b>: $all_b_tiles LiDAR tiles across urban, sparse, hilly and forested, plus $gamus_tiles GAMUS test tiles for relative mode.</p></div>
+    <div class="card"><h4>Rules</h4><p>Test tile lists never change once evaluated. Tuning uses val only. Calibration code never reads reference data. Every run saves its config, per-tile CSV, metrics and error maps.</p></div>
+  </div>
+  <h3>Scene mode</h3>
+  <p>Each site's whole 4096 px scene is processed once, the way a user's upload would be (depth, DEM, calibration), and the test tiles are scored inside it. A single 300–600 m tile holds only about 10 × 10 DEM cells, too few to learn a scale from; our first tuning round, done per tile, showed exactly that failure, and scene mode is the realistic fix. Calibration still never sees the reference.</p>
+  <h3>Methods compared</h3>
+  <ul>
+    <li><b>DEM only:</b> the calibration DEM resampled to the image grid. It answers "what did the model add?"</li>
+    <li><b>Method A:</b> a global affine fit of the network output to the DEM (baseline).</li>
+    <li><b>Method B (DepthWizard):</b> DEM terrain plus calibrated detail, the default.</li>
+    <li><b>Relative mode (GAMUS):</b> scale-aligned, labelled as such everywhere.</li>
+  </ul>
+</section>
+
+<!-- ============================== 9. RESULTS ============================== -->
+<section class="section">
+  <div class="kicker">9 · Results</div>
+  <h2>Accuracy by landscape</h2>
+  <p>Mean of per-tile values over each landscape's test tiles, in metres. Truth: USGS 3DEP LiDAR DSM (NAVD88). Calibration DEM: Copernicus GLO-30 (EGM2008), so raw RMSE and bias include a datum offset; offset-free RMSE removes it. Run <span class="mono">$run_id</span>.</p>
+  $table_main
+  <div class="grid2">
+    <div>$chart_rmse</div>
+    <div>$chart_ndsm</div>
+  </div>
+
+  <h3>Reading the results</h3>
+  <ul>
+    <li><b>Better than the DEM overall:</b> RMSE $all_dem_rmse → $all_b_rmse m ($all_gain_rmse % lower) and correlation $all_dem_r → $all_b_r over all $all_b_tiles tiles.</li>
+    <li><b>Where the detail matters, it helps:</b> urban $urban_dem_rmse → $urban_b_rmse m, forested $forested_dem_rmse → $forested_b_rmse m. On buildings and trees alone, sparse scenes improve most: nDSM RMSE $sparse_dem_ndsm → $sparse_b_ndsm m ($sparse_gain_ndsm % lower).</li>
+    <li><b>Where it can't help, it doesn't hurt:</b> hilly ($hilly_dem_rmse → $hilly_b_rmse m) and sparse ($sparse_dem_rmse → $sparse_b_rmse m) come out level with the DEM, because the correlation gate falls back to the DEM when the network disagrees with the terrain.</li>
+    <li><b>The gains are modest.</b> The network is general-purpose, trained on ground-level photos; a 30 m DEM already explains most of the height. Fine-tuning on top-down data (section 12) is the next step to widen the margin.</li>
+    <li><b>The naive approach fails.</b> Method A, the network stretched to the DEM, scores $all_a_rmse m overall (appendix D).</li>
+  </ul>
+</section>
+
+<section class="section">
+  <div class="kicker">9 · Results (continued)</div>
+  <div class="grid2">
+    <div>
+      <h3 style="margin-top:1mm">Relative mode: GAMUS</h3>
+      <p>Relative DSMs have no metres. Each is fitted to the reference height above ground with a least-squares scale and shift, then scored. These numbers are <b>scale-aligned</b>.</p>
+      <table class="compact">
+        <thead><tr><th>Dataset</th><th class="num">Tiles</th><th class="num">RMSE (m)</th><th class="num">MAE (m)</th><th class="num">r</th></tr></thead>
+        <tbody><tr><td>GAMUS test</td><td class="num">$gamus_tiles</td><td class="num">$gamus_rmse</td><td class="num">$gamus_mae</td><td class="num">$gamus_r</td></tr></tbody>
+      </table>
+      <p class="small muted">The pretrained network knows roughly where buildings are but not their exact relative heights in dense city blocks; this is the gap the GAMUS fine-tune targets.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:1mm">Runtime</h3>
+      <p>Mean over $rt_scenes site scenes of $rt_scene_px px on $device; the DEM is read from the local cache.</p>
+      <table class="compact">
+        <thead><tr><th>Stage</th><th class="num">Seconds per scene</th></tr></thead>
+        <tbody>
+          <tr><td>Relative height (global pass, tiles, stitching)</td><td class="num">$rt_depth</td></tr>
+          <tr><td>Calibration</td><td class="num">$rt_cal</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">The model loads once when the app starts. The 8192 × 8192 px Namchi scene takes about 39 s end to end, including reading and export (section 10).</p>
+    </div>
+  </div>
+
+  <h3>How tuning changed the result</h3>
+  <p>Settings were tuned on the validation split only, in scene mode (run <span class="mono">$tune_run</span>). The objective is the mean over landscapes of the mean per-tile RMSE:</p>
+  <table class="compact" style="width:70%">
+    <thead><tr><th>Configuration</th><th class="num">Validation objective (m)</th></tr></thead>
+    <tbody>
+      <tr><td>DEM only</td><td class="num">$tune_dem</td></tr>
+      <tr><td>Method B, untuned defaults (blind scene prior)</td><td class="num">$tune_old</td></tr>
+      <tr><td>Method B, tuned (DEM-band scale, k = 1.0, prior 0)</td><td class="num">$tune_best</td></tr>
+    </tbody>
+  </table>
+  <p>The untuned version invented relief on flat and hilly ground and lost to the DEM. The fix wasn't a bigger model but a better scale source, the DEM band with its correlation gate, which is why the tuned pipeline beats the DEM on the test split it had never seen.</p>
+
+  <h3>Failure gallery: the worst tiles</h3>
+  <p>The five test tiles with the highest DepthWizard RMSE. They are part of every average above.</p>
+  $worst_table
+  $gallery_figures
+  <div class="callout warm">
+    <p style="margin:0"><b>What we see.</b> In the forested Smokies tile the NMAD is small: most of the tile is fine, and the RMSE comes from a few extreme values. The LiDAR reference there contains isolated returns far above its own ground model, noise in the truth rather than a model error. The four Denver tiles are downtown high-rises, which the 30 m DEM smooths away and one scene-wide scale can't fully restore. Formal one-line causes are being written by the team into <span class="mono">evals/failure_causes.yaml</span>.</p>
+  </div>
+</section>
+
+<!-- ============================== 10. NAMCHI ============================== -->
+<section class="section">
+  <div class="kicker">10 · Case study</div>
+  <h2>Namchi, South Sikkim</h2>
+  <p class="lede">A hill town on steep slopes: the DEM knows the mountain, the image knows the town. This is the demo scene, and the kind of place in India where DepthWizard is most useful.</p>
+  <div class="row" style="grid-template-columns: 1024fr 2072fr">
+    <img src="$fig_namchi_rgb_full" alt="Namchi, full scene" style="width:100%;border-radius:1.5mm">
+    <img src="$fig_namchi_full" alt="CartoDEM and DepthWizard DSM for the full Namchi scene" style="width:100%;border-radius:1.5mm">
+  </div>
+  <p class="small muted" style="margin-top:1.6mm">The full 2.5 km × 2.5 km scene. <b>Left:</b> the WorldView-3 image. <b>Middle:</b> CartoDEM alone, hillshaded. <b>Right:</b> DepthWizard's DSM. Imagery: Maxar Open Data Program (CC BY-NC 4.0). CartoDEM Version-3 R1, National Remote Sensing Centre, ISRO, Government of India, Hyderabad, India.</p>
+
+  <div class="grid2" style="margin-top:4mm">
+    <div>
+      <h3 style="margin-top:0">The scene</h3>
+      <table class="compact">
+        <tbody>
+          <tr><td>Image</td><td>WorldView-3, 14 March 2022, 0.3 m, Maxar Open Data Program</td></tr>
+          <tr><td>Size</td><td>8192 × 8192 px, UTM zone 45N (EPSG:32645)</td></tr>
+          <tr><td>DEM</td><td>CartoDEM V3R1 tile 88E27N, converted from the WGS84 ellipsoid to EGM2008</td></tr>
+          <tr><td>Heights</td><td>about 960 m to 1860 m above sea level</td></tr>
+          <tr><td>Time</td><td>read 1.4 s, relative height 27.3 s, calibration 5.1 s, export 5.2 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin-top:0">How it was calibrated</h3>
+      <p>The DEM-band source applied: the DEM's own resolvable detail and the network's correlate (r = 0.157 over 7396 DEM cells, above the 0.1 gate), giving a scale of 66 m per unit of relative detail. Confidence: medium. The whole calibration record is stored in the GeoTIFF tags and shown in the viewer's calibration panel.</p>
+      <p><b>A datum catch.</b> Uncorrected, CartoDEM sat about 46 m below Copernicus GLO-30 here, matching the local EGM2008 geoid height (−43.8 m): CartoDEM V3R1 is ellipsoidal. DepthWizard now converts it automatically.</p>
+    </div>
+  </div>
+  <div class="callout warm"><p style="margin:0"><b>No accuracy claim.</b> There is no public LiDAR for Namchi, so this scene is shown qualitatively. The accuracy numbers in section 9 come from the US test sites.</p></div>
+</section>
+
+<!-- ============================== 11. LIMITATIONS ============================== -->
+<section class="section">
+  <div class="kicker">11 · Limitations</div>
+  <h2>What it can't do yet</h2>
+  <p class="lede">Stated plainly, because a DSM is only useful if you know when not to trust it.</p>
+  <table class="compact">
+    <thead><tr><th style="width:26%">Limitation</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td><b>No Indian accuracy numbers</b></td><td>No public LiDAR for Indian cities was found. Indian scenes are qualitative until reference data is available.</td></tr>
+      <tr><td><b>Aerial test imagery</b></td><td>The LiDAR test sites use NAIP aerial images (0.3–0.6 m). ISRO satellite imagery differs in resolution, haze and viewing angle.</td></tr>
+      <tr><td><b>Modest gains over the DEM</b></td><td>The network is general-purpose; most of the height comes from the DEM. Fine-tuning on top-down data is in progress.</td></tr>
+      <tr><td><b>Tall buildings</b></td><td>Downtown towers are under-restored (the Denver tiles in the gallery). In off-nadir images tall buildings also lean, so roof heights land beside their footprints.</td></tr>
+      <tr><td><b>Water and shadows</b></td><td>The network's output over water is noise, and dark shadows can read as low ground.</td></tr>
+      <tr><td><b>Flat, featureless ground</b></td><td>The network may invent relief. The correlation gate usually falls back to the DEM, at low confidence.</td></tr>
+      <tr><td><b>Relative mode has no metres</b></td><td>Plain photos give relative heights. A ground sample distance gives horizontal scale only.</td></tr>
+      <tr><td><b>DEM quality matters</b></td><td>The DSM inherits the DEM's terrain. A bare-earth DEM under-predicts dense built-up areas.</td></tr>
+      <tr><td><b>Neighbouring splits</b></td><td>Validation and test tiles come from neighbouring parts of the same six sites; more sites are needed before claiming generalisation to new places.</td></tr>
+      <tr><td><b>Package size</b></td><td>The desktop build is about 4.7 GB, almost all of it PyTorch with CUDA.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================== 12. STATUS + ROADMAP ============================== -->
+<section class="section">
+  <div class="kicker">12 · Status and roadmap</div>
+  <h2>Where the project is, and what comes next</h2>
+  <h3 style="margin-top:1mm">Status by phase</h3>
+  <table class="compact">
+    <thead><tr><th style="width:8%">Phase</th><th style="width:30%">Scope</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Setup and data</td><td>Done: environment, model, GAMUS, NAIP + 3DEP sites, DEMs, demo scene</td></tr>
+      <tr><td>1</td><td>Height extraction</td><td>Done: tiled depth with seamless stitching, relative export</td></tr>
+      <tr><td>2</td><td>Scale calibration</td><td>Done: DEM providers, Methods A and B, GCPs, datum handling</td></tr>
+      <tr><td>3</td><td>Backend and viewer</td><td>Done: jobs API, bundle export, validate, stratum integration, Terrains switcher</td></tr>
+      <tr><td>4</td><td>Full evaluation</td><td>Done: tuning on val, full test run, report. Pending: human-written failure causes, faculty review</td></tr>
+      <tr><td>5</td><td>Fixes, fine-tune, packaging</td><td>Packaging and robustness done. GAMUS fine-tune in progress (training data downloading; training script tested)</td></tr>
+      <tr><td>6</td><td>Pitch</td><td>In preparation: idea deck, demo script, backup video</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Roadmap</h3>
+  <table class="compact">
+    <thead><tr><th style="width:30%">Next step</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><b>Fine-tune on GAMUS</b></td><td>Train the decoder on top-down height (encoder frozen, scale-and-shift-invariant loss), keep it only if validation improves, then rerun the full evaluation.</td></tr>
+      <tr><td><b>Validate on ISRO data</b></td><td>Accuracy numbers for Indian cities, with Cartosat imagery and ISRO or state LiDAR / stereo references.</td></tr>
+      <tr><td><b>OSM building heights</b></td><td>A second scene-specific scale source where buildings carry height or floor tags.</td></tr>
+      <tr><td><b>Off-nadir correction</b></td><td>Use the view-angle metadata to move leaning roofs back onto their footprints.</td></tr>
+      <tr><td><b>Shadow-length heights</b></td><td>An independent height cue from shadows and the sun angle in the image metadata.</td></tr>
+      <tr><td><b>Water masking</b></td><td>Fall back to the DEM where local texture shows water.</td></tr>
+      <tr><td><b>A lighter build</b></td><td>An ONNX / CPU-only package for machines without a GPU, a fraction of the current size.</td></tr>
+    </tbody>
+  </table>
+  <h3>Feasibility</h3>
+  <p>DepthWizard already runs end to end on an 8 GB laptop GPU and on a CPU, offline, from a standalone app. The main risks were identified early and each has an answer: if accuracy gains stay small, the DEM fallback keeps results no worse than the DEM; if the GPU runs out of memory, batches shrink and the CPU takes over; if the live demo fails, bundles can be opened directly in the viewer and a backup video is ready.</p>
+</section>
+
+<!-- ============================== 13. CREDITS ============================== -->
+<section class="section">
+  <div class="kicker">13 · Credits and references</div>
+  <h2>Credits, licences and references</h2>
+  <h3 style="margin-top:1mm">Required credits</h3>
+  <ul class="small">
+    <li><b>CartoDEM:</b> CartoDEM Version-3 R1, National Remote Sensing Centre, ISRO, Government of India, Hyderabad, India. Used under a single-user NRSC licence; not redistributed.</li>
+    <li><b>Imagery (Namchi):</b> Maxar Open Data Program, CC BY-NC 4.0. Non-commercial use only.</li>
+    <li><b>GAMUS:</b> earthflow/GAMUS, CC-BY-4.0.</li>
+    <li><b>Copernicus DEM:</b> Copernicus DEM GLO-30, © DLR e.V. 2010–2014 and © Airbus Defence and Space GmbH 2014–2018, provided under COPERNICUS by the European Union and ESA.</li>
+    <li><b>NAIP</b> (USDA Farm Service Agency) and <b>USGS 3DEP LiDAR</b>, public domain, accessed through Microsoft Planetary Computer.</li>
+    <li><b>Depth Anything V2 Small</b>, Apache-2.0. <b>stratum</b> viewer (github.com/Ahd4wnn/stratum), built on Three.js (MIT).</li>
+  </ul>
+  <h3>References</h3>
+  <ol class="small">
+    <li>Yang, L. et al. <i>Depth Anything V2.</i> arXiv:2406.09414, 2024.</li>
+    <li>Oquab, M. et al. <i>DINOv2: Learning Robust Visual Features without Supervision.</i> arXiv:2304.07193, 2023.</li>
+    <li>Ranftl, R., Bochkovskiy, A., Koltun, V. <i>Vision Transformers for Dense Prediction.</i> ICCV 2021.</li>
+    <li><i>Depth Any Canopy: Leveraging Depth Foundation Models for Canopy Height Estimation.</i> arXiv:2408.04523, 2024.</li>
+    <li>Pavlis, N. K. et al. <i>The development and evaluation of the Earth Gravitational Model 2008 (EGM2008).</i> J. Geophys. Res. 117, B04406, 2012.</li>
+    <li>National Remote Sensing Centre. <i>CartoDEM Version-3 R1.</i> Bhuvan, ISRO.</li>
+    <li>European Space Agency. <i>Copernicus DEM GLO-30.</i></li>
+    <li>U.S. Geological Survey. <i>3D Elevation Program (3DEP) LiDAR.</i></li>
+    <li>USDA Farm Service Agency. <i>National Agriculture Imagery Program (NAIP).</i></li>
+    <li>GAMUS benchmark, Hugging Face <i>earthflow/GAMUS</i>, CC-BY-4.0.</li>
+    <li>SIH 2026 problem statement SIH26175 (ISRO) and reference repository github.com/IMG-PROCESS-SAC/SIH2026.</li>
+  </ol>
+</section>
+
+<!-- ============================== APPENDICES ============================== -->
+<section class="section">
+  <div class="kicker">Appendix A</div>
+  <h2>Running DepthWizard</h2>
+  <h3 style="margin-top:1mm">Desktop app</h3>
+  <p>Open <code>dist\DepthWizard\depthwizard.exe</code> (or the desktop shortcut). The window opens when the backend is ready. <b>Process image</b> uploads a new image; <b>Terrains</b> switches between results; <b>Validate</b> compares against a reference DSM. Results are stored in <code>%LOCALAPPDATA%\in.sih2026.depthwizard</code>.</p>
+  <h3>From source</h3>
+<pre style="font-size:7.3pt"># once: environment, depth model, geoid grid, viewer
+py -3.12 -m venv .venv
+.venv/Scripts/python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+.venv/Scripts/python -m pip install -e ".[dev,eval]"
+.venv/Scripts/python scripts/fetch_model.py
+.venv/Scripts/python scripts/fetch_geoid.py
+cd viewer && npm ci && npm run build && cd ..
+
+# one image from the command line
+python -m depthwizard run --input scene.tif --out out/ --dem data/dem/cartodem/
+
+# the app in a browser
+run_local.bat</pre>
+  <h3>Reproducing the evaluation</h3>
+<pre style="font-size:7.3pt">python -m evals.datasets.naip3dep build             # NAIP + 3DEP sites
+python -m evals.datasets.gamus download --split test
+python -m evals.tune                                 # tuning on val only
+python -m evals.run --split full                     # test run, writes evals/REPORT.md
+python scripts/build_overview_pdf.py                 # this document</pre>
+
+  <div class="kicker" style="margin-top:8mm">Appendix B</div>
+  <h3 style="margin-top:1mm">Repository layout</h3>
+<pre>depthwizard/   the pipeline: io, depth, calibrate, export, pipeline.py, CLI
+api/           FastAPI backend: jobs, bundles, validate, the viewer as static files
+evals/         datasets, fixed splits, metrics, tuning, REPORT.md, results/
+viewer/        stratum (Three.js) with the DepthWizard module
+desktop/       Tauri shell, PyInstaller spec, portable packaging
+configs/       every tunable setting (default.yaml and overrides)
+scripts/       model, geoid and demo downloads; server; fine-tune; this PDF
+docs/          plan, architecture, viewer contract, evaluation, pitch
+tests/         pytest suite</pre>
+</section>
+
+<section class="section">
+  <div class="kicker">Appendix C</div>
+  <h2>Glossary</h2>
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:24%"><b>DSM</b></td><td>Digital surface model: the height of the top surface, including buildings and trees.</td></tr>
+      <tr><td><b>DTM / bare-earth DEM</b></td><td>Digital terrain model: the height of the ground with buildings and vegetation removed.</td></tr>
+      <tr><td><b>DEM</b></td><td>Digital elevation model: the general term. SRTM, Copernicus GLO-30 and CartoDEM are surface-like DEMs at about 30 m.</td></tr>
+      <tr><td><b>nDSM</b></td><td>Normalised DSM: DSM minus DTM, the height of objects above the ground.</td></tr>
+      <tr><td><b>Relative DSM</b></td><td>Heights with the right order and shape but no units; scaled 0 to 1.</td></tr>
+      <tr><td><b>Absolute DSM</b></td><td>Heights in metres above a stated vertical datum.</td></tr>
+      <tr><td><b>Georeferenced</b></td><td>An image with a coordinate reference system and a transform from pixels to map coordinates.</td></tr>
+      <tr><td><b>GSD</b></td><td>Ground sample distance: the ground size of one pixel, in metres.</td></tr>
+      <tr><td><b>UTM</b></td><td>Universal Transverse Mercator: a map projection in metres, used so pixels are square.</td></tr>
+      <tr><td><b>Vertical datum</b></td><td>The surface heights are measured from: an ellipsoid (WGS84) or a geoid model (EGM2008, EGM96, NAVD88).</td></tr>
+      <tr><td><b>Geoid</b></td><td>The equipotential surface closest to mean sea level; EGM2008 models it worldwide.</td></tr>
+      <tr><td><b>GCP</b></td><td>Ground control point: a location with a known height.</td></tr>
+      <tr><td><b>Monocular depth</b></td><td>Estimating depth from a single image.</td></tr>
+      <tr><td><b>ViT / DPT</b></td><td>Vision transformer encoder / Dense Prediction Transformer decoder, the architecture of Depth Anything V2.</td></tr>
+      <tr><td><b>Scale-aligned</b></td><td>A relative prediction fitted to the reference with the best scale and shift before scoring.</td></tr>
+      <tr><td><b>RMSE, MAE, NMAD</b></td><td>Root-mean-square error, mean absolute error, normalised median absolute deviation (see section 8).</td></tr>
+      <tr><td><b>Hann window</b></td><td>A smooth weighting that fades to zero at tile edges, used to blend overlapping tiles.</td></tr>
+      <tr><td><b>Huber loss</b></td><td>A fitting loss that is quadratic for small errors and linear for large ones, so outliers count less.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="section">
+  <div class="kicker">Appendix D</div>
+  <h3 style="margin-top:1mm">Full results, all three methods</h3>
+  <p class="small muted">Run <span class="mono">$run_id</span>. Metres; r is unitless. Method A is the global affine baseline.</p>
+  $table_all_methods
+</section>
+
+</body>
+</html>
