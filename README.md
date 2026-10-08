@@ -67,7 +67,7 @@ python -m depthwizard run --input path/to/scene.tif --out out/ --dem data/dem/ca
 run_local.bat          # Windows (or ./run_local.sh elsewhere)
 ```
 
-In the app, **Process image** uploads a new image, and **Terrains** switches between everything processed so far. A result's link (`?job=<id>`) reopens it.
+In the app, **Process image** uploads a new image, and **Terrains** switches between everything processed so far. A result's link (`?job=<id>`) reopens it. On a metric result, **DEM only** (key B, also while flying) swaps the terrain between the calibration DEM alone and DepthWizard's DSM under the same camera; it shows best on the Slope surface at Quality "Detail · 1024". **Water level** floods the terrain and shows the share of the area under water.
 
 ```bash
 # optional: the demo scene (Namchi, Sikkim; Maxar Open Data, CC BY-NC 4.0)

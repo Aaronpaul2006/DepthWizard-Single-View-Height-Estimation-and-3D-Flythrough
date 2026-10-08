@@ -83,7 +83,7 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getEleme
 const refreshIcons = () => createIcons({ icons, attrs: { 'stroke-width': 1.65 } });
 document.querySelector('#app')!.innerHTML = `
   <header class="app-header">
-    <a class="brand" href="./" aria-label="Stratum home"><span class="brand-mark">${icon('mountain')}</span><span>stratum<span class="brand-dot">.</span></span></a>
+    <!-- DepthWizard patch: product name --><a class="brand" href="./" aria-label="DepthWizard home"><span class="brand-mark">${icon('mountain')}</span><span>DepthWizard<span class="brand-dot">.</span></span></a>
     <div class="breadcrumb"><span class="header-divider"></span>Workspace ${icon('chevron-right')} <strong>Terrain explorer</strong></div>
     <div class="header-actions"><span class="offline-badge"><span class="status-dot"></span>Local workspace</span><button id="help" class="icon-button" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">${icon('keyboard')}</button><button id="open-dataset" class="primary-button">${icon('folder-open')} Open dataset <span class="key-hint">O</span></button></div>
   </header>
@@ -436,7 +436,15 @@ chart.onHover = (p, index) => {
   if (p && !pinned) showSample(p);
   if (profilePoints.length) viewer.setProfile(profilePoints, index);
 };
-async function loadDataset(files?: File[]) {
+// DepthWizard patch: keepView swaps the surface in place (the DEM flip): same camera, flight
+// mode, surface, exaggeration and profile.
+async function loadDataset(files?: File[], options: { keepView?: boolean } = {}) {
+  const keep = !!options.keepView && !!meta;
+  const kept = {
+    profile: profileEndpoints,
+    surface: surface === 'error' ? ('ortho' as Surface) : surface,
+    exaggeration: Number($<HTMLInputElement>('exaggeration').value),
+  };
   const op = ++operation;
   candidate?.dispose();
   candidate = new TerrainWorker();
@@ -451,7 +459,7 @@ async function loadDataset(files?: File[]) {
   );
   let prepared: Awaited<ReturnType<TerrainViewer['prepareTexture']>> | undefined;
   try {
-    let payload: Record<string, unknown> = { cap: 513 },
+    let payload: Record<string, unknown> = { cap: keep ? cap : 513 },
       ortho: File | undefined;
     if (files) {
       const dsm = files.find((f) => f.name.toLowerCase() === 'dsm.bin'),
@@ -493,18 +501,23 @@ async function loadDataset(files?: File[]) {
     meta = result.meta;
     metrics = undefined;
     errorRangeOverride = undefined;
-    cap = 513;
+    if (!keep) cap = 513; // a flip keeps the chosen mesh quality
     autoSlow = 0;
     old?.dispose();
-    setMode('orbit');
-    viewer.setDataset(meta, result.mesh, prepared.texture);
+    if (!keep) setMode('orbit');
+    viewer.setDataset(meta, result.mesh, prepared.texture, keep);
     prepared = undefined;
     clearInspector();
     clearProfile();
-    setSurface('ortho');
-    $<HTMLInputElement>('exaggeration').value = '1';
-    $('exaggeration-value').innerHTML = '1.0<span>×</span>';
-    $<HTMLSelectElement>('quality').value = 'auto';
+    if (keep) {
+      setSurface(kept.surface);
+      viewer.setExaggeration(kept.exaggeration);
+    } else {
+      setSurface('ortho');
+      $<HTMLInputElement>('exaggeration').value = '1';
+      $('exaggeration-value').innerHTML = '1.0<span>×</span>';
+    }
+    if (!keep) $<HTMLSelectElement>('quality').value = 'auto';
     currentName = files
       ? ((meta as Meta & { source_name?: string }).source_name ?? 'Imported terrain')
       : 'Alpine catchment';
@@ -539,7 +552,9 @@ async function loadDataset(files?: File[]) {
     meshStatus(result.mesh);
     refreshIcons();
     if (!files) await buildProfile({ col: 90, row: 550 }, { col: 660, row: 190 }, true);
+    if (keep && kept.profile) await buildProfile(kept.profile.a, kept.profile.b);
     loading(false);
+    if (keep) return;
     if (meta.units === 'relative')
       notify(
         'Relative vertical units: horizontal distances are metres; slope is an uncalibrated inclination proxy.',
@@ -730,7 +745,7 @@ $('export-profile').onclick = () => {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'stratum-elevation-profile.csv';
+  a.download = 'depthwizard-elevation-profile.csv'; // DepthWizard patch: product name
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
@@ -829,5 +844,6 @@ installBackend({
   },
   icon,
   refreshIcons,
+  setWaterLevel: (level) => viewer.setWaterLevel(level),
 });
 void loadDataset();

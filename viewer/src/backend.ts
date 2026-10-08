@@ -9,16 +9,20 @@
  * - A link to the full-resolution DSM GeoTIFF.
  * - "Validate with GeoTIFF": the backend reprojects the reference, returns metrics and writes
  *   reference.bin on the bundle grid, which then feeds stratum's own difference tools.
+ * - "DEM only" (key B): swaps the terrain between the calibration DEM (dem.bin) and DepthWizard's
+ *   DSM under the same camera: what a 30 m DEM knows, and what the model adds.
+ * - "Water level": a flood plane over metric results, with the share of the area under water.
  */
 
 export interface BackendHooks {
-  loadDataset: (files?: File[]) => Promise<void>;
+  loadDataset: (files?: File[], options?: { keepView?: boolean }) => Promise<void>;
   loadReferenceFiles: (dsm: File, meta?: File) => Promise<void>;
   loading: (value: boolean, title?: string, detail?: string) => void;
   notify: (message: string, error?: boolean) => void;
   setErrorRange: (range: number | undefined) => void;
   icon: (name: string, cls?: string) => string;
   refreshIcons: () => void;
+  setWaterLevel: (level: number | null) => void;
 }
 
 interface JobStatus {
@@ -57,12 +61,32 @@ interface BundleMeta {
   crs: string | null;
   width: number;
   height: number;
+  units: string;
   has_mask?: boolean;
+  dem_file?: string | null; // contract v4: the calibration DEM on the same grid
+  calibration?: { method?: string; confidence?: string; dem_source?: string | null } | null;
+}
+
+/** One surface the viewer can show for the open job: its heights (masked cells NaN) and meta. */
+interface Surface {
+  heights: Float32Array;
+  meta: File;
+  sorted?: Float32Array; // finite heights in ascending order, for the flooded share
 }
 
 const POLL_INTERVAL_MS = 1000; // the contract asks for about one status request per second
 const ERROR_RANGE_NMAD = 3; // difference heatmap clamp: ±3 × NMAD
 const MASKED = 127; // mask.png is 0 or 255; anything above the midpoint is a filled cell
+// The water slider runs from the DSM's lowest point to its highest. Positions map to height along a
+// curve (rise ∝ position²), so the first half of the slider is fine control over the lowest quarter.
+const FLOOD_CURVE = 2;
+const FLOOD_STEPS = 500; // water slider positions; 0 means no water
+const DEM_NAMES: Record<string, string> = {
+  cartodem: 'CartoDEM (ISRO)',
+  copernicus_glo30: 'Copernicus GLO-30',
+  srtm: 'SRTM',
+  nasadem: 'NASADEM',
+};
 const STAGE_TITLES: Record<string, string> = {
   depth: 'Estimating heights',
   calibrate: 'Calibrating to metres',
@@ -84,6 +108,9 @@ const escapeHtml = (s: string) =>
 
 let currentJob: string | undefined;
 let currentMetaFile: File | undefined;
+let surfaces: { ortho: File; dsm: Surface; dem?: Surface; demName: string } | undefined;
+let showingDem = false;
+let switching = false;
 
 async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -126,6 +153,16 @@ export function installBackend(hooks: BackendHooks) {
     'afterend',
     `<button id="dw-open-validate" class="reference-button" hidden>${icon('layers')} Validate with GeoTIFF</button>`,
   );
+  $('draw-profile').insertAdjacentHTML(
+    'afterend',
+    `<span id="dw-flip-divider" class="toolbar-divider" hidden></span><button id="dw-flip" aria-pressed="false" title="Switch between the DEM alone and DepthWizard (B)" hidden>${icon('layers')}<span id="dw-flip-label">DEM only</span><span class="toolbar-key">B</span></button>`,
+  );
+  document
+    .querySelector('.exaggeration-section')!
+    .insertAdjacentHTML(
+      'afterend',
+      `<section id="dw-water" class="exaggeration-section" hidden><div class="section-title"><h2>Water level</h2><output id="dw-water-value" for="dw-water-level">Off</output></div><input type="range" id="dw-water-level" aria-label="Water level" min="0" max="${FLOOD_STEPS}" step="1" value="0"/><div class="range-labels"><span>Off</span><span id="dw-water-share"></span><span id="dw-water-max"></span></div></section>`,
+    );
   document.body.insertAdjacentHTML(
     'beforeend',
     `<dialog id="terrains-dialog"><div class="dialog-heading"><span class="dialog-icon">${icon('layers')}</span><button class="icon-button close-dialog" aria-label="Close dialog">${icon('x')}</button></div><h2>Your terrains.</h2><p>Everything processed on this computer, newest first. Pick one to open it.</p><div id="dw-terrain-list" class="surface-options" role="list" style="max-height: 52vh; overflow-y: auto; padding-right: 4px"></div><div class="dialog-footer"><span id="dw-terrain-state" class="small-muted"></span><button id="dw-terrain-process" class="secondary-button">${icon('upload')} Process a new image</button></div></dialog>
@@ -169,6 +206,22 @@ export function installBackend(hooks: BackendHooks) {
     void runJob(form, hooks);
   };
   $('dw-open-validate').onclick = () => validateDialog.showModal();
+  $('dw-flip').onclick = () => void flip(hooks);
+  $('dw-water-level').oninput = () => updateWater(hooks);
+  window.addEventListener('keydown', (e) => {
+    if (
+      e.key.toLowerCase() !== 'b' ||
+      e.ctrlKey ||
+      e.metaKey ||
+      e.altKey ||
+      // Sliders and dropdowns keep focus after use; B should still flip then. Text fields don't.
+      (e.target as HTMLElement).matches('input:not([type=range]):not([type=checkbox]),textarea') ||
+      document.querySelector('dialog[open]')
+    )
+      return;
+    e.preventDefault(); // also stops a focused dropdown from jumping to an option starting with B
+    void flip(hooks); // works in fly mode too: the pointer lock stays on
+  });
   $('dw-reference').onchange = () =>
     ($<HTMLButtonElement>('dw-validate').disabled =
       !$<HTMLInputElement>('dw-reference').files?.length);
@@ -189,8 +242,12 @@ export function installBackend(hooks: BackendHooks) {
 function forgetJob() {
   currentJob = undefined;
   currentMetaFile = undefined;
+  surfaces = undefined;
+  showingDem = false;
   $('dw-open-validate').hidden = true;
   $('dw-job-links').hidden = true;
+  $('dw-flip').hidden = $('dw-flip-divider').hidden = true;
+  $('dw-water').hidden = true;
   history.replaceState(null, '', location.pathname);
 }
 
@@ -285,44 +342,150 @@ async function runJob(form: FormData, hooks: BackendHooks) {
   }
 }
 
-/** Filled cells (mask.png = 255) become NaN, which stratum draws as holes and never measures. */
-async function maskHeights(dsm: File, mask: File, meta: BundleMeta): Promise<File> {
-  const little = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
-  if (!little) return dsm; // Float32Array below assumes the contract's little-endian layout
+/** mask.png pixels (RGBA) on the bundle grid. */
+async function maskPixels(mask: File, meta: BundleMeta): Promise<Uint8ClampedArray> {
   const bitmap = await createImageBitmap(mask);
   const canvas = new OffscreenCanvas(meta.width, meta.height);
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(bitmap, 0, 0, meta.width, meta.height);
   bitmap.close();
-  const pixels = ctx.getImageData(0, 0, meta.width, meta.height).data;
-  const heights = new Float32Array(await dsm.arrayBuffer());
-  for (let i = 0; i < heights.length; i++) if (pixels[i * 4] > MASKED) heights[i] = NaN;
-  return new File([heights.buffer], 'dsm.bin', { type: 'application/octet-stream' });
+  return ctx.getImageData(0, 0, meta.width, meta.height).data;
 }
+
+/** Heights from a .bin. Filled cells (mask.png = 255) become NaN, which stratum draws as holes
+ * and never measures. Float32Array assumes the contract's little-endian layout. */
+async function readHeights(file: File, mask?: Uint8ClampedArray): Promise<Float32Array> {
+  const heights = new Float32Array(await file.arrayBuffer());
+  const little = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
+  if (mask && little)
+    for (let i = 0; i < heights.length; i++) if (mask[i * 4] > MASKED) heights[i] = NaN;
+  return heights;
+}
+
+const binFile = (heights: Float32Array) =>
+  new File([heights], 'dsm.bin', { type: 'application/octet-stream' });
 
 async function openJob(jobId: string, hooks: BackendHooks, message?: string) {
   try {
     const metaFile = await bundleFile(jobId, 'meta.json', 'application/json');
     const meta = JSON.parse(await metaFile.text()) as BundleMeta;
-    let dsm = await bundleFile(jobId, 'dsm.bin', 'application/octet-stream');
-    if (meta.has_mask)
-      dsm = await maskHeights(dsm, await bundleFile(jobId, 'mask.png', 'image/png'), meta);
-    const files = [dsm, await bundleFile(jobId, 'ortho.png', 'image/png'), metaFile];
+    const mask = meta.has_mask
+      ? await maskPixels(await bundleFile(jobId, 'mask.png', 'image/png'), meta)
+      : undefined;
+    const bin = (name: string) => bundleFile(jobId, name, 'application/octet-stream');
+    const dsm: Surface = { heights: await readHeights(await bin('dsm.bin'), mask), meta: metaFile };
+    const ortho = await bundleFile(jobId, 'ortho.png', 'image/png');
+    const source = meta.calibration?.dem_source ?? '';
+    const demName = DEM_NAMES[source] ?? (source || 'the DEM');
+    let dem: Surface | undefined;
+    if (meta.dem_file) {
+      // The DEM keeps the job's name and extent; its calibration panel says what it is.
+      const demMeta = {
+        ...meta,
+        calibration: { method: 'dem_only (no model)', confidence: 'n/a', dem_source: source },
+      };
+      dem = {
+        heights: await readHeights(await bin(meta.dem_file), mask),
+        meta: new File([JSON.stringify(demMeta)], 'meta.json', { type: 'application/json' }),
+      };
+    }
     hooks.loading(false);
-    await hooks.loadDataset(files);
+    await hooks.loadDataset([binFile(dsm.heights), ortho, metaFile]);
     currentJob = jobId;
     currentMetaFile = metaFile;
+    surfaces = { ortho, dsm, dem, demName };
+    showingDem = false;
     history.replaceState(null, '', `${location.pathname}?job=${encodeURIComponent(jobId)}`);
     const links = $('dw-job-links');
     links.innerHTML = `<span>Full-resolution DSM <a class="text-button" href="${jobUrl(jobId, '/dsm.tif')}" download>${hooks.icon('download')} GeoTIFF</a></span>`;
     links.hidden = false;
     $('dw-open-validate').hidden = !meta.crs;
+    $('dw-flip').hidden = $('dw-flip-divider').hidden = !dem;
+    updateFlipButton();
+    $('dw-water').hidden = meta.units !== 'm';
+    $<HTMLInputElement>('dw-water-level').value = '0';
+    updateWater(hooks);
     hooks.refreshIcons();
     if (message) hooks.notify(message);
   } catch (e) {
     hooks.loading(false);
     hooks.notify((e as Error).message, true);
   }
+}
+
+function updateFlipButton() {
+  $('dw-flip-label').textContent = showingDem ? 'DepthWizard' : 'DEM only';
+  $('dw-flip').classList.toggle('active', showingDem);
+  $('dw-flip').setAttribute('aria-pressed', String(showingDem));
+}
+
+/** Swap the terrain between DepthWizard's DSM and the DEM alone, keeping the camera. */
+async function flip(hooks: BackendHooks) {
+  if (!surfaces?.dem || switching) return;
+  switching = true;
+  const toDem = !showingDem;
+  const surface = toDem ? surfaces.dem : surfaces.dsm;
+  try {
+    await hooks.loadDataset([binFile(surface.heights), surfaces.ortho, surface.meta], {
+      keepView: true,
+    });
+    showingDem = toDem;
+    updateFlipButton();
+    updateWater(hooks); // same water height, new surface
+    hooks.notify(
+      toDem
+        ? `DEM only: ${surfaces.demName}, about 30 m per cell. This is all the DEM knows. Press B for DepthWizard.`
+        : 'DepthWizard: the same terrain, plus the buildings and trees the model sees. Press B for the DEM only.',
+    );
+  } finally {
+    switching = false;
+  }
+}
+
+/** Finite heights in ascending order, cached per surface. */
+function sortedHeights(surface: Surface): Float32Array {
+  if (!surface.sorted) surface.sorted = surface.heights.filter((h) => Number.isFinite(h)).sort();
+  return surface.sorted;
+}
+
+/** Share of the values below level in an ascending array (binary search). */
+function shareBelow(sorted: Float32Array, level: number): number {
+  let lo = 0,
+    hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (sorted[mid] < level) lo = mid + 1;
+    else hi = mid;
+  }
+  return sorted.length ? lo / sorted.length : 0;
+}
+
+/** Water level from the slider. Its scale comes from the DSM, so a slider position is the same
+ * absolute height on the DSM and on the DEM. */
+function updateWater(hooks: BackendHooks) {
+  if (!surfaces || $('dw-water').hidden) return;
+  const step = Number($<HTMLInputElement>('dw-water-level').value);
+  const base = sortedHeights(surfaces.dsm);
+  if (!base.length) return;
+  const low = base[0],
+    span = base[base.length - 1] - low,
+    rise = (step / FLOOD_STEPS) ** FLOOD_CURVE * span;
+  const f = (v: number, digits = 1) =>
+    v.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  $('dw-water-max').textContent = `+${f(span, 0)} m`;
+  if (step === 0) {
+    hooks.setWaterLevel(null);
+    $('dw-water-value').textContent = 'Off';
+    $('dw-water-share').textContent = '';
+    return;
+  }
+  const level = low + rise;
+  hooks.setWaterLevel(level);
+  const shown = showingDem && surfaces.dem ? surfaces.dem : surfaces.dsm;
+  $('dw-water-value').innerHTML = `+${f(rise)}<span> m</span>`;
+  $('dw-water-share').textContent =
+    `${f(100 * shareBelow(sortedHeights(shown), level))} % under water`;
+  $('dw-water').title = `Water surface at ${f(level, 2)} m, ${f(rise, 2)} m above the lowest point`;
 }
 
 async function validate(jobId: string, reference: File, hooks: BackendHooks) {

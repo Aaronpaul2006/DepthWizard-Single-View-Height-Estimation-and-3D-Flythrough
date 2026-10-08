@@ -408,7 +408,12 @@
 <section class="section">
   <div class="kicker">6 · The technology (continued)</div>
   <h3 style="margin-top:1mm">6.8 The viewer</h3>
-  <p>The 3D viewer is <b>stratum</b>, an offline Three.js terrain workspace (TypeScript, Vite, a web worker for mesh building), extended with a small, logged DepthWizard module. From stratum: orbit and pointer-lock flight (WASD), height inspection on hover and click, slope and elevation colouring, hillshade and contour lines, vertical exaggeration, elevation profiles with CSV export, and reference RMSE/MAE with an error heatmap. Added by DepthWizard: <b>Process image</b> (upload and progress), <b>Terrains</b> (switch between every result on the computer), <b>Validate</b> (server-side metrics at full resolution), a calibration panel, a GeoTIFF download link, percentage readouts and an "approximate scale" label for relative results.</p>
+  <p>The 3D viewer is <b>stratum</b>, an offline Three.js terrain workspace (TypeScript, Vite, a web worker for mesh building), extended with a small, logged DepthWizard module. From stratum: orbit and pointer-lock flight (WASD), height inspection on hover and click, slope and elevation colouring, hillshade and contour lines, vertical exaggeration, elevation profiles with CSV export, and reference RMSE/MAE with an error heatmap. Added by DepthWizard: <b>Process image</b> (upload and progress), <b>Terrains</b> (switch between every result on the computer), <b>Validate</b> (server-side metrics at full resolution), <b>DEM only</b> (key B: swaps the terrain between the calibration DEM alone and DepthWizard's DSM under the same camera, even in flight), <b>Water level</b> (a flood plane with the share of the area under water), a calibration panel, a GeoTIFF download link, percentage readouts and an "approximate scale" label for relative results.</p>
+  <div class="row" style="grid-template-columns: 1fr 1fr">
+    <img src="$fig_flip_dem" alt="Namchi, CartoDEM alone, slope surface" style="width:100%;border-radius:1.5mm">
+    <img src="$fig_flip_dsm" alt="Namchi, DepthWizard DSM, slope surface" style="width:100%;border-radius:1.5mm">
+  </div>
+  <p class="small muted" style="margin-top:1.6mm">The "DEM only" flip in the app, same camera, Slope surface, Namchi. <b>Left:</b> CartoDEM alone: smooth 30 m facets. <b>Right:</b> DepthWizard: the same hillside with every building's walls standing out. Imagery: Maxar Open Data Program (CC BY-NC 4.0); CartoDEM V3R1, NRSC, ISRO.</p>
   <figure><img src="$fig_app" alt="DepthWizard viewer showing Namchi"><figcaption>The app with the Namchi result open. Left: the calibration record (method, confidence, DEM), resolution and the GeoTIFF download. Centre: the terrain in 3D, with Orbit, Fly and Draw profile. Imagery: Maxar Open Data Program (CC BY-NC 4.0); CartoDEM V3R1, NRSC, ISRO.</figcaption></figure>
   <div class="grid2" style="align-items:start">
     <figure style="margin-top:0"><img src="$fig_terrains" alt="The Terrains dialog"><figcaption>Terrains: every result processed on this computer, newest first, plus a built-in sample.</figcaption></figure>
@@ -456,7 +461,7 @@
       <tr><td><b>EGM2008 geoid grid</b></td><td>NGA, via PROJ data</td><td>Converting ellipsoidal heights to sea level</td><td>2.5′</td><td>Public domain</td></tr>
       <tr><td><b>NAIP imagery</b></td><td>USDA, via Planetary Computer</td><td>Evaluation images (aerial)</td><td>0.3–0.6 m</td><td>Public domain</td></tr>
       <tr><td><b>USGS 3DEP LiDAR DSM/DTM</b></td><td>USGS, via Planetary Computer</td><td>Evaluation truth only; never seen by calibration</td><td>2 m</td><td>Public domain</td></tr>
-      <tr><td><b>GAMUS</b></td><td>earthflow/GAMUS, Hugging Face</td><td>Relative-mode evaluation; fine-tuning (in progress)</td><td>1024 px tiles</td><td>CC-BY-4.0</td></tr>
+      <tr><td><b>GAMUS</b></td><td>earthflow/GAMUS, Hugging Face</td><td>Relative-mode evaluation; decoder fine-tuning</td><td>1024 px tiles</td><td>CC-BY-4.0</td></tr>
       <tr><td><b>Namchi, WorldView-3</b></td><td>Maxar Open Data Program</td><td>Demo scene (India)</td><td>0.3 m</td><td>CC BY-NC 4.0</td></tr>
     </tbody>
   </table>
@@ -527,7 +532,7 @@
     <li><b>Better than the DEM overall:</b> RMSE $all_dem_rmse → $all_b_rmse m ($all_gain_rmse % lower) and correlation $all_dem_r → $all_b_r over all $all_b_tiles tiles.</li>
     <li><b>Where the detail matters, it helps:</b> urban $urban_dem_rmse → $urban_b_rmse m, forested $forested_dem_rmse → $forested_b_rmse m. On buildings and trees alone, sparse scenes improve most: nDSM RMSE $sparse_dem_ndsm → $sparse_b_ndsm m ($sparse_gain_ndsm % lower).</li>
     <li><b>Where it can't help, it doesn't hurt:</b> hilly ($hilly_dem_rmse → $hilly_b_rmse m) and sparse ($sparse_dem_rmse → $sparse_b_rmse m) come out level with the DEM, because the correlation gate falls back to the DEM when the network disagrees with the terrain.</li>
-    <li><b>The gains are modest.</b> The network is general-purpose, trained on ground-level photos; a 30 m DEM already explains most of the height. Fine-tuning on top-down data (section 12) is the next step to widen the margin.</li>
+    <li><b>The gains are modest.</b> The network is general-purpose, trained on ground-level photos; a 30 m DEM already explains most of the height. Our GAMUS fine-tune (below) sharpens the relative heights a lot, but has not yet improved the calibrated result; retuning the calibration for it is the next step.</li>
     <li><b>The naive approach fails.</b> Method A, the network stretched to the DEM, scores $all_a_rmse m overall (appendix D).</li>
   </ul>
 </section>
@@ -540,9 +545,10 @@
       <p>Relative DSMs have no metres. Each is fitted to the reference height above ground with a least-squares scale and shift, then scored. These numbers are <b>scale-aligned</b>.</p>
       <table class="compact">
         <thead><tr><th>Dataset</th><th class="num">Tiles</th><th class="num">RMSE (m)</th><th class="num">MAE (m)</th><th class="num">r</th></tr></thead>
-        <tbody><tr><td>GAMUS test</td><td class="num">$gamus_tiles</td><td class="num">$gamus_rmse</td><td class="num">$gamus_mae</td><td class="num">$gamus_r</td></tr></tbody>
+        <tbody><tr><td>GAMUS test, pretrained</td><td class="num">$gamus_tiles</td><td class="num">$gamus_rmse</td><td class="num">$gamus_mae</td><td class="num">$gamus_r</td></tr>
+        <tr class="hl"><td>GAMUS test, fine-tuned</td><td class="num">$ft_tiles</td><td class="num">$ft_rmse</td><td class="num">$ft_mae</td><td class="num">$ft_r</td></tr></tbody>
       </table>
-      <p class="small muted">The pretrained network knows roughly where buildings are but not their exact relative heights in dense city blocks; this is the gap the GAMUS fine-tune targets.</p>
+      <p class="small muted">Fine-tuned: we trained the decoder on GAMUS train (encoder frozen, scale-and-shift-invariant loss), picked the epoch on GAMUS val, and scored GAMUS test once (run <span class="mono">$ft_run</span>). On the LiDAR quick split it did not beat the pretrained model, whose calibration settings were tuned for it, so the app keeps the pretrained model for now.</p>
     </div>
     <div>
       <h3 style="margin-top:1mm">Runtime</h3>
@@ -622,7 +628,7 @@
     <tbody>
       <tr><td><b>No Indian accuracy numbers</b></td><td>No public LiDAR for Indian cities was found. Indian scenes are qualitative until reference data is available.</td></tr>
       <tr><td><b>Aerial test imagery</b></td><td>The LiDAR test sites use NAIP aerial images (0.3–0.6 m). ISRO satellite imagery differs in resolution, haze and viewing angle.</td></tr>
-      <tr><td><b>Modest gains over the DEM</b></td><td>The network is general-purpose; most of the height comes from the DEM. Fine-tuning on top-down data is in progress.</td></tr>
+      <tr><td><b>Modest gains over the DEM</b></td><td>The network is general-purpose; most of the height comes from the DEM. The GAMUS fine-tune improves relative heights but not yet the calibrated DSM.</td></tr>
       <tr><td><b>Tall buildings</b></td><td>Downtown towers are under-restored (the Denver tiles in the gallery). In off-nadir images tall buildings also lean, so roof heights land beside their footprints.</td></tr>
       <tr><td><b>Water and shadows</b></td><td>The network's output over water is noise, and dark shadows can read as low ground.</td></tr>
       <tr><td><b>Flat, featureless ground</b></td><td>The network may invent relief. The correlation gate usually falls back to the DEM, at low confidence.</td></tr>
@@ -647,8 +653,8 @@
       <tr><td>2</td><td>Scale calibration</td><td>Done: DEM providers, Methods A and B, GCPs, datum handling</td></tr>
       <tr><td>3</td><td>Backend and viewer</td><td>Done: jobs API, bundle export, validate, stratum integration, Terrains switcher</td></tr>
       <tr><td>4</td><td>Full evaluation</td><td>Done: tuning on val, full test run, report. Pending: human-written failure causes, faculty review</td></tr>
-      <tr><td>5</td><td>Fixes, fine-tune, packaging</td><td>Packaging and robustness done. GAMUS fine-tune in progress (training data downloading; training script tested)</td></tr>
-      <tr><td>6</td><td>Pitch</td><td>In preparation: idea deck, demo script, backup video</td></tr>
+      <tr><td>5</td><td>Fixes, fine-tune, packaging</td><td>Done: packaging, robustness, GAMUS fine-tune (kept aside: better on GAMUS, not yet on the LiDAR tiles). Pending: faculty review fixes, second-laptop test</td></tr>
+      <tr><td>6</td><td>Pitch</td><td>In preparation: idea deck, demo script with the DEM flip and flood tool, backup video</td></tr>
     </tbody>
   </table>
 
@@ -656,7 +662,7 @@
   <table class="compact">
     <thead><tr><th style="width:30%">Next step</th><th>Why</th></tr></thead>
     <tbody>
-      <tr><td><b>Fine-tune on GAMUS</b></td><td>Train the decoder on top-down height (encoder frozen, scale-and-shift-invariant loss), keep it only if validation improves, then rerun the full evaluation.</td></tr>
+      <tr><td><b>Retune for the fine-tuned model</b></td><td>The GAMUS-fine-tuned decoder already beats the pretrained one on GAMUS test. Retune the calibration settings for it on val, then rerun the full evaluation and switch if it wins.</td></tr>
       <tr><td><b>Validate on ISRO data</b></td><td>Accuracy numbers for Indian cities, with Cartosat imagery and ISRO or state LiDAR / stereo references.</td></tr>
       <tr><td><b>OSM building heights</b></td><td>A second scene-specific scale source where buildings carry height or floor tags.</td></tr>
       <tr><td><b>Off-nadir correction</b></td><td>Use the view-angle metadata to move leaning roofs back onto their footprints.</td></tr>

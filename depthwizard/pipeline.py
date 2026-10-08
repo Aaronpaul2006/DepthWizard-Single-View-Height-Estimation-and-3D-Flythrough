@@ -103,7 +103,7 @@ def run(
     with timed(result, "depth"):
         d = _depth(model, raster.rgb, cfg, lambda frac: report("depth", frac))
 
-    dsm = None
+    dsm = terrain = None
     if raster.georeferenced:
         report("calibrate", 0.0)
         with timed(result, "calibrate"):
@@ -118,6 +118,7 @@ def run(
                     d, dem.heights, dem.res_m, result.info["pixel_size_m"], cfg.calibration, gcps
                 )
                 dsm = np.where(valid & np.isfinite(dem.heights), cal.dsm, np.nan)
+                terrain = dem.heights
                 result.mode = "absolute"
                 result.calibration = {
                     "method": cal.method,
@@ -149,7 +150,7 @@ def run(
             _export(result, "dsm", dsm, raster, cfg, tags, tuple(cfg.relative.norm_percentiles))
             units = "m"
             viewer_cal = {k: result.calibration[k] for k in ("method", "confidence", "dem_source")}
-        _export_bundle(result, grid, raster, cfg, units, viewer_cal, valid, gsd_m)
+        _export_bundle(result, grid, raster, cfg, units, viewer_cal, valid, gsd_m, terrain)
 
     result.files["run_json"] = out / "run.json"
     _write_run_json(result, cfg)
@@ -201,8 +202,10 @@ def _export(result, stem, grid, raster, cfg, tags, preview_percentiles) -> None:
     result.files[f"{stem}_tif"], result.files[f"{stem}_preview_png"] = tif, png
 
 
-def _export_bundle(result, grid, raster, cfg, units, calibration, valid, gsd_m) -> None:
-    """Viewer bundle (VIEWER_CONTRACT.md) in <out>/bundle/."""
+def _export_bundle(
+    result, grid, raster, cfg, units, calibration, valid, gsd_m, terrain=None
+) -> None:
+    """Viewer bundle (VIEWER_CONTRACT.md) in <out>/bundle/. terrain: the DEM behind a metric DSM."""
     h, w = raster.shape
     if raster.georeferenced:
         pixel_size_m, assumed = result.info["pixel_size_m"], False
@@ -226,6 +229,7 @@ def _export_bundle(result, grid, raster, cfg, units, calibration, valid, gsd_m) 
         max_dsm_side=cfg.export.viewer_max_dsm_side,
         max_ortho_side=cfg.export.viewer_max_ortho_side,
         valid=valid,
+        terrain=terrain,
     )
     result.files["bundle"] = bundle
     result.info["bundle"] = {k: meta[k] for k in ("width", "height", "pixel_size_m", "units")}

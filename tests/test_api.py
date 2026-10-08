@@ -53,6 +53,15 @@ def test_health_and_errors(client):
     assert bad.status_code == 400
 
 
+def test_viewer_page_is_always_rechecked(client):
+    from api.main import VIEWER_DIST
+
+    if not (VIEWER_DIST / "index.html").exists():
+        pytest.skip("viewer not built")
+    page = client.get("/")
+    assert page.status_code == 200 and page.headers["cache-control"] == "no-cache"
+
+
 def test_corrupt_image_fails_cleanly_and_the_worker_survives(client):
     broken = client.post("/api/jobs", files={"image": ("broken.tif", b"not a tiff", "image/tiff")})
     status = wait(client, broken.json()["job_id"])

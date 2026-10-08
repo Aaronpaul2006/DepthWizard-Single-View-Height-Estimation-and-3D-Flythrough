@@ -4,6 +4,7 @@ meta.json   metadata
 dsm.bin     float32 little-endian, row-major, width × height, row 0 = north, never NaN
 ortho.png   RGB over exactly the same ground extent
 mask.png    optional, 255 where heights were filled or are unreliable
+dem.bin     optional (metric results), the calibration DEM on the same grid, same layout as dsm.bin
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import cv2
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
-CONTRACT_VERSION = 3
+CONTRACT_VERSION = 4
 # A downsampled DSM cell is trusted if at least half of the source pixels under it were valid.
 MIN_VALID_FRACTION = 0.5
 
@@ -54,7 +55,10 @@ def write_bundle(
     max_dsm_side: int,
     max_ortho_side: int,
     valid: np.ndarray | None = None,
+    terrain: np.ndarray | None = None,
 ) -> dict:
+    """terrain: the calibration DEM on the source grid (metric results). It is written as dem.bin
+    with the same averaging and gap filling as dsm.bin, so the viewer can show "DEM only"."""
     if units not in ("m", "relative"):
         raise ValueError(f"units must be 'm' or 'relative', not {units!r}")
     out = Path(out_dir)
@@ -68,6 +72,7 @@ def write_bundle(
     h, w = grid.shape
     missing = ~np.isfinite(grid)
     unreliable = missing | (frac < MIN_VALID_FRACTION)
+    idx = None
     if missing.any():  # the contract forbids NaN: take the nearest valid value, flag it
         idx = distance_transform_edt(missing, return_distances=False, return_indices=True)
         grid = grid[tuple(idx)]
@@ -76,6 +81,18 @@ def write_bundle(
     trusted = grid[~unreliable] if (~unreliable).any() else grid.ravel()
 
     grid.astype("<f4").tofile(out / "dsm.bin")
+    has_dem = terrain is not None
+    if has_dem:
+        dem_grid, _ = area_downsample(terrain, ok & np.isfinite(terrain), max_dsm_side)
+        if idx is not None:
+            dem_grid = dem_grid[tuple(idx)]
+        dem_missing = ~np.isfinite(dem_grid)
+        if dem_missing.any():  # a DEM gap under valid DSM cells: fill it the same way
+            fill = distance_transform_edt(dem_missing, return_distances=False, return_indices=True)
+            dem_grid = dem_grid[tuple(fill)]
+        dem_grid.astype("<f4").tofile(out / "dem.bin")
+    elif (out / "dem.bin").exists():
+        (out / "dem.bin").unlink()
     ortho_scale = min(1.0, max_ortho_side / max(rgb.shape[:2]))
     if ortho_scale < 1.0:
         rgb = cv2.resize(rgb, None, fx=ortho_scale, fy=ortho_scale, interpolation=cv2.INTER_AREA)
@@ -99,6 +116,7 @@ def write_bundle(
         "bounds": bounds,
         "crs": crs,
         "has_mask": has_mask,
+        "dem_file": "dem.bin" if has_dem else None,
         "calibration": calibration,
         "source_name": source_name,
     }

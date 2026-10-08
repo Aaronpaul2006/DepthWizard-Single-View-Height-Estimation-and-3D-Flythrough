@@ -35,6 +35,7 @@ BUNDLE_FILES = {
     "mask.png": "image/png",
     "error.bin": "application/octet-stream",
     "reference.bin": "application/octet-stream",
+    "dem.bin": "application/octet-stream",
 }
 RASTER_SUFFIXES = {".tif", ".tiff"}
 
@@ -187,8 +188,20 @@ def health():
     }
 
 
+class ViewerFiles(StaticFiles):
+    """The built viewer. Its HTML must be rechecked on every load: without this, the desktop
+    app's WebView2 keeps serving a cached index.html (and so the old viewer) after an update.
+    The JS/CSS it links have content hashes in their names, so they may still be cached."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        if response.media_type == "text/html":
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 if VIEWER_DIST.exists():
-    app.mount("/", StaticFiles(directory=VIEWER_DIST, html=True), name="viewer")
+    app.mount("/", ViewerFiles(directory=VIEWER_DIST, html=True), name="viewer")
 else:
 
     @app.get("/", response_class=PlainTextResponse)

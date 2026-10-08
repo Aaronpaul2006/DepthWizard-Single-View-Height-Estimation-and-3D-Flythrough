@@ -1,0 +1,63 @@
+{
+  "run_id": "datum-20260924-103041",
+  "note": "CartoDEM V3R1 vs Copernicus GLO-30 (EGM2008) on each CartoDEM tile's grid. If CartoDEM is ellipsoidal, CartoDEM - Copernicus = EGM2008 geoid undulation N.",
+  "tiles": [
+    {
+      "tile": "cdne44m",
+      "bounds_lonlat": [
+        77.9999,
+        17.0001,
+        78.9999,
+        18.0001
+      ],
+      "cells": 12960000,
+      "cartodem_minus_copernicus_median_m": -74.5,
+      "cartodem_minus_copernicus_nmad_m": 2.410763342285156,
+      "pearson_r": 0.9994760091101569,
+      "egm2008_geoid_median_m": -76.43450927734375,
+      "egm2008_geoid_range_m": [
+        -79.53721618652344,
+        -74.34306335449219
+      ],
+      "after_geoid_correction_median_m": 2.07843017578125
+    },
+    {
+      "tile": "cdnf43a",
+      "bounds_lonlat": [
+        71.9999,
+        23.0001,
+        72.9999,
+        24.0001
+      ],
+      "cells": 12960000,
+      "cartodem_minus_copernicus_median_m": -52.566383361816406,
+      "cartodem_minus_copernicus_nmad_m": 1.807653987121582,
+      "pearson_r": 0.9990608065789353,
+      "egm2008_geoid_median_m": -53.25965881347656,
+      "egm2008_geoid_range_m": [
+        -56.32135009765625,
+        -50.614593505859375
+      ],
+      "after_geoid_correction_median_m": 0.5611114501953125
+    },
+    {
+      "tile": "cdng45e",
+      "bounds_lonlat": [
+        87.9999,
+        27.0001,
+        88.9999,
+        28.0001
+      ],
+      "cells": 12960000,
+      "cartodem_minus_copernicus_median_m": -38.537261962890625,
+      "cartodem_minus_copernicus_nmad_m": 13.97850913696289,
+      "pearson_r": 0.9931682739305123,
+      "egm2008_geoid_median_m": -34.95100784301758,
+      "egm2008_geoid_range_m": [
+        -47.21791458129883,
+        -28.589603424072266
+      ],
+      "after_geoid_correction_median_m": -1.0455322265625
+    }
+  ]
+}

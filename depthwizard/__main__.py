@@ -19,7 +19,9 @@ def main(argv: list[str] | None = None) -> None:
     run_p.add_argument("--dem", help="DEM GeoTIFF, or a folder of DEM tiles (e.g. CartoDEM)")
     run_p.add_argument("--gcps", help="CSV: x,y,height_m (image CRS) or lon,lat,height_m")
     run_p.add_argument(
-        "--offline", action="store_true", help="never fetch Copernicus DEM tiles (cache only)"
+        "--offline",
+        action="store_true",
+        help="don't use Copernicus GLO-30 at all; without --dem the output is a relative DSM",
     )
     run_p.add_argument(
         "--config", action="append", default=[], help="YAML merged over configs/default.yaml"
@@ -30,7 +32,14 @@ def main(argv: list[str] | None = None) -> None:
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
     )
     cfg = load_config(*args.config)
-    result = run(args.input, args.out, cfg)
+    result = run(
+        args.input,
+        args.out,
+        cfg,
+        dem_path=args.dem,
+        gcps_path=args.gcps,
+        allow_fetch=not args.offline,
+    )
     print(json.dumps({k: str(v) for k, v in result.files.items()}, indent=2))
 
 

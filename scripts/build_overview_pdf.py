@@ -65,6 +65,8 @@ FIGURES = {
     "fig_namchi_zoom": "out/pitch_assets/namchi_dem_vs_dsm_zoom1km.png",
     "fig_namchi_rgb_full": "out/pitch_assets/namchi_input_rgb.jpg",
     "fig_namchi_full": "out/pitch_assets/namchi_dem_vs_dsm_full.png",
+    "fig_flip_dem": "out/pitch_assets/flip_namchi_slope_dem.png",
+    "fig_flip_dsm": "out/pitch_assets/flip_namchi_slope_dsm.png",
 }
 BROWSERS = (
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
@@ -297,6 +299,32 @@ def compact(path: Path) -> str:
     return out.as_uri()
 
 
+def finetune_numbers(run: Path) -> dict[str, str]:
+    """GAMUS test scored with the fine-tuned decoder (a gamus_test-* run with that model)."""
+    rel = json.loads((run / "metrics.json").read_text(encoding="utf-8"))["relative_summary"]
+    return {
+        "ft_run": run.name,
+        "ft_tiles": str(rel["tiles"]),
+        "ft_rmse": f"{rel['rmse']:.2f}",
+        "ft_mae": f"{rel['mae']:.2f}",
+        "ft_r": f"{rel['pearson_r']:.3f}",
+    }
+
+
+def finetune_run(name: str | None) -> Path:
+    """The named run, else the newest gamus_test-* run whose config used the fine-tuned model."""
+    if name:
+        return run_dir("gamus_test", name)
+    for run in sorted(RESULTS.glob("gamus_test-*"), reverse=True):
+        cfg = yaml.safe_load((run / "config.yaml").read_text(encoding="utf-8"))
+        if "gamus" in str(cfg.get("model", {}).get("local_dir", "")):
+            return run
+    raise SystemExit(
+        "No GAMUS test run with the fine-tuned model: "
+        "python -m evals.run --split gamus_test --config configs/model_gamus.yaml"
+    )
+
+
 def figures() -> dict[str, str]:
     missing = [p for p in FIGURES.values() if not (REPO_ROOT / p).exists()]
     if missing:
@@ -348,6 +376,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="python scripts/build_overview_pdf.py")
     parser.add_argument("--run", help="full eval run id (default: the newest full-* run)")
     parser.add_argument("--tune", help="tuning run id (default: the newest tune-* run)")
+    parser.add_argument(
+        "--finetune", help="GAMUS test run with the fine-tuned model (default: the newest)"
+    )
     parser.add_argument("--html-only", action="store_true", help="write the HTML, skip the PDF")
     args = parser.parse_args()
 
@@ -373,6 +404,7 @@ def main() -> None:
         **accuracy_numbers(summary),
         **runtime(per_tile),
         **tuning_numbers(tune),
+        **finetune_numbers(finetune_run(args.finetune)),
         **worst_tiles(per_tile, run),
         **figures(),
     }

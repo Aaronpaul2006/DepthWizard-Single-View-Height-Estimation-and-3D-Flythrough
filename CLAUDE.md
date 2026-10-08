@@ -66,6 +66,7 @@ python -m evals.run --split quick     # 5 tiles, run after every model/calibrati
 python -m evals.run --split val       # tuning split; test_urban/test_sparse/test_hilly/test_forested for reporting
 python -m evals.polarity              # GAMUS val: prediction must correlate positively with height
 python -m evals.tune                  # sweep calibration settings on val only; apply the winner by hand
+python -m evals.datum_check           # CartoDEM tiles vs Copernicus: confirms the ellipsoidal offset per tile
 python -m evals.run --split full      # the four test splits + GAMUS test, regenerates evals/REPORT.md
 run_local.bat                         # backend + viewer on http://127.0.0.1:8000, opens the browser (= python scripts/serve.py)
 uvicorn api.main:app --port 8000      # same, without opening the browser (?job=<id> reopens a job)
@@ -83,6 +84,6 @@ python scripts/build_overview_pdf.py  # project overview PDF from docs/overview/
 - Every tile's prediction has its own scale and offset. Align tiles to the low-res global pass before blending, or the seams show. See ARCHITECTURE.md, Stage 2.
 - GeoTIFFs in EPSG:4326 have pixel sizes in degrees. Reproject to the scene's UTM zone before anything else.
 - Height sources use different vertical datums (EGM96, EGM2008, ellipsoid). A mismatch shows up as a constant offset of metres to tens of metres. Always report offset-free RMSE next to raw RMSE.
-- CartoDEM V3R1 heights are ellipsoidal (WGS84), not sea level. On tile 88E27N (Namchi) CartoDEM sits 46 m below Copernicus GLO-30 (median over the scene, NMAD 5.8 m, r = 0.999), which matches the EGM2008 geoid undulation there (−43.8 m). The pipeline converts CartoDEM to EGM2008 heights with the geoid grid from `scripts/fetch_geoid.py`. Without that grid the DSM stays ellipsoidal (absolute heights about 40–50 m low in India), and its datum tag says so.
+- CartoDEM V3R1 heights are ellipsoidal (WGS84), not sea level. On tile 88E27N (Namchi) CartoDEM sits 46 m below Copernicus GLO-30 (median over the scene, NMAD 5.8 m, r = 0.999), which matches the EGM2008 geoid undulation there (−43.8 m). The pipeline converts CartoDEM to EGM2008 heights with the geoid grid from `scripts/fetch_geoid.py`. Without that grid the DSM stays ellipsoidal (absolute heights about 35–80 m low in India, depending on the local geoid), and its datum tag says so. Confirmed tile-wide on three tiles (`python -m evals.datum_check`, `evals/results/datum-20260924-103041`): Sikkim G45E -38.5 m vs N -35.0 m, -1.0 m after correction; Ahmedabad F43A -52.6 m vs N -53.3 m, +0.6 m after correction; Hyderabad E44M -74.5 m vs N -76.4 m, +2.1 m after correction.
 - Method B assumes the DEM is a blurred version of the true surface. Copernicus GLO-30, SRTM, and CartoDEM roughly are. A bare-earth DEM will under-predict dense city blocks. Log which DEM each run used.
 - Water, shadows, and leaning tall buildings (in off-nadir images) are known failures. Measure them and keep them in the failure gallery.

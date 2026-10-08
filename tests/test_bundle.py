@@ -29,7 +29,7 @@ def world(meta, row, col):
 def test_cone_bundle_matches_the_contract(tmp_path):
     meta = build("cone", tmp_path)
     meta, dsm, ortho = load(tmp_path)
-    assert meta["contract_version"] == 3 and (meta["width"], meta["height"]) == (1025, 1025)
+    assert meta["contract_version"] == 4 and (meta["width"], meta["height"]) == (1025, 1025)
     assert (tmp_path / "dsm.bin").stat().st_size == 1025 * 1025 * 4
     assert np.isfinite(dsm).all()
     peak = np.unravel_index(np.argmax(dsm), dsm.shape)
@@ -56,6 +56,7 @@ def test_relative_bundle_flags_assumed_scale(tmp_path):
     meta, dsm, _ = load(tmp_path)
     assert meta["units"] == "relative" and meta["pixel_size_assumed"] is True
     assert 0.0 <= dsm.min() and dsm.max() <= 1.0
+    assert meta["dem_file"] is None and not (tmp_path / "dem.bin").exists()  # no DEM, no flip
 
 
 def test_big_input_is_capped_and_gaps_are_filled_and_masked(tmp_path):
@@ -84,3 +85,32 @@ def test_big_input_is_capped_and_gaps_are_filled_and_masked(tmp_path):
     assert max(ortho.shape[:2]) == 4096
     mask = cv2.imread(str(tmp_path / "mask.png"), cv2.IMREAD_UNCHANGED)
     assert mask[0, 0] == 255 and mask[-1, -1] == 0
+
+
+def test_dem_is_written_on_the_dsm_grid_with_the_same_gaps_filled(tmp_path):
+    h, w = 3000, 4500
+    terrain = np.linspace(100.0, 200.0, w, dtype=np.float32)[None, :].repeat(h, axis=0)
+    heights = terrain + 5.0
+    heights[:300, :300] = np.nan  # a hole in the DSM ...
+    terrain[-50:, -50:] = np.nan  # ... and one in the DEM alone, under valid DSM cells
+    heights[-50:, -50:] = np.nan  # (the pipeline masks the DSM wherever the DEM is missing)
+    meta = write_bundle(
+        tmp_path,
+        heights,
+        np.zeros((h, w, 3), np.uint8),
+        units="m",
+        pixel_size_m=0.5,
+        pixel_size_assumed=False,
+        bounds=[0, 0, 2250, 1500],
+        crs="EPSG:32644",
+        calibration={},
+        source_name="dem",
+        max_dsm_side=2048,
+        max_ortho_side=4096,
+        terrain=terrain,
+    )
+    assert meta["contract_version"] == 4 and meta["dem_file"] == "dem.bin"
+    _, dsm, _ = load(tmp_path)
+    dem = np.fromfile(tmp_path / "dem.bin", dtype="<f4").reshape(dsm.shape)
+    assert np.isfinite(dem).all()
+    assert np.allclose(dsm - dem, 5.0, atol=1e-3)  # same cells, same averaging, same fill

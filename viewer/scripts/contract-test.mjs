@@ -133,6 +133,40 @@ try {
       !(await page.locator('#dw-calibration').isHidden()),
       await text('#dw-calibration'),
     );
+    // DEM flip (contract v4): the same screen point reads the DEM, then DepthWizard again, and
+    // the camera stays put (the same point maps to the same grid cell).
+    const cell = await text('#inspect-grid');
+    await page.keyboard.press('b');
+    await expect(page.locator('#dw-flip-label')).toHaveText('DepthWizard', { timeout: 60000 });
+    await idle();
+    const dem = await probe(0.5, 0.5);
+    check('DEM flip keeps the camera', (await text('#inspect-grid')) === cell, cell);
+    check(
+      'DEM flip shows the DEM on its own',
+      dem.unit === 'm' &&
+        dem.height !== hit.height &&
+        (await text('#dw-calibration')).includes('dem only'),
+      `DSM ${hit.height} m, DEM ${dem.height} m`,
+    );
+    await page.locator('#dw-flip').click();
+    await expect(page.locator('#dw-flip-label')).toHaveText('DEM only', { timeout: 60000 });
+    await idle();
+    const back = await probe(0.5, 0.5);
+    check('flip back restores DepthWizard', back.height === hit.height, `${back.height} m`);
+
+    // Water level: off at 0, and the flooded share only grows as the water rises.
+    const water = page.locator('#dw-water-level');
+    await water.fill('100');
+    const low = await num('#dw-water-share');
+    await water.fill('500');
+    const high = await num('#dw-water-share');
+    await water.fill('0');
+    check(
+      'water level floods more as it rises',
+      low > 0 && high > low && high <= 100 && (await text('#dw-water-value')) === 'Off',
+      `${low} % → ${high} %`,
+    );
+
     await page.locator('#dw-open-validate').click();
     await page.locator('#dw-reference').setInputFiles(resolve(TILE, 'dsm.tif'));
     await page.locator('#dw-validate').click();
@@ -159,6 +193,10 @@ try {
   await idle();
   check('switch to the built-in sample', (await text('#dataset-name')) === 'Alpine catchment');
   check('URL forgets the job on the sample', !page.url().includes('job='), page.url());
+  check(
+    'job-only tools hidden on the sample',
+    (await page.locator('#dw-flip').isHidden()) && (await page.locator('#dw-water').isHidden()),
+  );
   await page.locator('#dw-terrains').click();
   await page.locator('#dw-terrain-list button[data-job]').first().click();
   await idle();

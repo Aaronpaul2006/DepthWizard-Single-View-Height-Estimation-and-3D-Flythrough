@@ -59,6 +59,8 @@ export class TerrainViewer {
   private texture?: THREE.Texture;
   private profileGroup = new THREE.Group();
   private marker?: THREE.Mesh;
+  // DepthWizard patch: flood water plane (setWaterLevel).
+  private water?: THREE.Mesh;
   private keys = new Set<string>();
   private pointer = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
@@ -192,9 +194,11 @@ export class TerrainViewer {
     texture.needsUpdate = true;
     return { texture, width, height };
   }
-  setDataset(meta: Meta, mesh: MeshData, texture: THREE.Texture) {
+  // DepthWizard patch: keepView swaps the surface under the current camera (the DEM flip).
+  setDataset(meta: Meta, mesh: MeshData, texture: THREE.Texture, keepView = false) {
     this.clearProfile();
     this.clearMarker();
+    this.setWaterLevel(null);
     if (this.texture) {
       (this.texture.image as ImageBitmap).close?.();
       this.texture.dispose();
@@ -242,7 +246,32 @@ export class TerrainViewer {
     this.camera.updateProjectionMatrix();
     this.orbit.maxDistance = extent * 12;
     this.orbit.minDistance = extent * 0.015;
-    this.reset();
+    if (!keepView) this.reset();
+  }
+  // DepthWizard patch: a translucent water plane at an absolute height (null removes it). It sits
+  // in the vertically scaled group, like the terrain, so it follows the exaggeration.
+  setWaterLevel(level: number | null) {
+    if (this.water) {
+      this.group.remove(this.water);
+      this.water.geometry.dispose();
+      (this.water.material as THREE.Material).dispose();
+      this.water = undefined;
+    }
+    if (level === null || !this.meta) return;
+    const w = (this.meta.width - 1) * this.meta.pixel_size_m,
+      d = (this.meta.height - 1) * this.meta.pixel_size_m;
+    this.water = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({
+        color: '#2f7fd0',
+        transparent: true,
+        opacity: 0.62,
+        side: THREE.DoubleSide,
+      }),
+    );
+    this.water.name = 'dw-water';
+    this.water.position.y = level - this.meta.min_h;
+    this.group.add(this.water);
   }
   setMesh(mesh: MeshData) {
     this.meshData = mesh;
